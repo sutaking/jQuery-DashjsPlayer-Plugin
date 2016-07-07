@@ -90,7 +90,7 @@ a {
     background: rgba(150, 153, 159, .2);
 }
 
-.controls-bar .buttons {
+.controls-bar .buttons-area {
     position: relative;
     width: 480px;
     height: 80px;

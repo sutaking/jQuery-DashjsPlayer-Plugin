@@ -1,7 +1,9 @@
 (function ($) {
     'use strict';
 
-    var video_, currentTime_, durationTime_, runID;
+    var PROCESS_BAR_MAX_WIDTH = 1400;
+
+    var video_;
 
     function initApp(uri) {
       // Install built-in polyfills to patch browser incompatibilities.
@@ -80,6 +82,12 @@
         return sec ? array[1] + ':' + array[2] : '00:00';
     };
 
+    function processTransform(line, value) {
+        $(line).css({
+            transform: 'translate3d(' + (value * PROCESS_BAR_MAX_WIDTH - PROCESS_BAR_MAX_WIDTH) + 'px, 0, 0)'
+        });
+    };
+
     function createUI (rootNode) {
         var root_ = rootNode;
         
@@ -93,14 +101,14 @@
         var processLine= $('<div/>', {
             class : 'process'
         });
-        var line1 = $('<div/>', {
+        var loadProcess = $('<div/>', {
             class : 'load'
         });
-        var line2 = $('<div/>', {
+        var playProcess = $('<div/>', {
             class : 'play'
         });
-        processLine.append(line1);
-        processLine.append(line2);
+        processLine.append(loadProcess);
+        processLine.append(playProcess);
 
         var currentTime = $('<div/>', {
             text : '00:00',
@@ -119,31 +127,38 @@
         var contorlBar = $('<div/>', {
             class : 'controls-bar'
         });
-        var buttons = $('<div/>', {
-            class : 'buttons'
+        var buttonsArea = $('<div/>', {
+            class : 'buttons-area'
         });
         var preButton = $('<div/>', {
             class : 'button icon-previous',
-            focusable: true
+            'focusable': ''
         });
+
         var playButton = $('<div/>', {
             class : 'button icon-play',
-            focusable: true
+            focusable: ''
+
         });
+        playButton.on('selected', function() {
+            playButton.hasClass('icon-play') ? video_.play() : video_.pause();
+            playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
+        });
+
         var nextButton = $('<div/>', {
             class : 'button icon-next',
-            focusable: true
+            focusable: ''
         });
-        buttons.append(preButton);
-        buttons.append(playButton);
-        buttons.append(nextButton);
+        buttonsArea.append(preButton);
+        buttonsArea.append(playButton);
+        buttonsArea.append(nextButton);
 
-        contorlBar.append(buttons);
+        contorlBar.append(buttonsArea);
 
         barElement.append(processBar);
         barElement.append(contorlBar);
         
-        var video_ = $('<video/>', {
+        var qVideo_ = $('<video/>', {
             id : 'video',
             width : '1920px',
             height : '1080px',
@@ -152,15 +167,17 @@
 
         var events = {
             loadedmetadata: function loadedmetadata() {
-                durationTime.text(formatTime(video_[0].duration));
+                durationTime.text(formatTime(qVideo_[0].duration));
+                playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
             },
             timeupdate : function timeupdate(){
-                currentTime.text(formatTime(video_[0].currentTime));
-                
+                currentTime.text(formatTime(qVideo_[0].currentTime));
+                processTransform(playProcess, qVideo_[0].currentTime/qVideo_[0].duration);
+                processTransform(loadProcess, qVideo_[0].buffered.end(0)/qVideo_[0].duration);
             }
         }
         
-        video_.on('loadedmetadata timeupdate', function (event) {
+        qVideo_.on('loadedmetadata timeupdate', function (event) {
             //console.log(event.type);
             events[event.type]();
         });
@@ -182,5 +199,22 @@
         initApp(options.uri);
 
     };
+
+    $(document).ready(function() {
+        $.caph.focus.activate(function(nearestFocusableFinderProvider, controllerProvider){
+
+            controllerProvider.onSelected(function (event, originalEvent) {
+                
+                var target = $(event.currentTarget);
+                if(target.hasClass('icon-play')) {
+                    //console.log(event.currentTarget);
+                    $('icon-play').trigger('select');
+                }
+
+            });
+
+        });
+    });
+
 
 })(jQuery);

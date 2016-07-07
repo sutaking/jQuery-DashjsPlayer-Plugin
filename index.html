@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CAPH Dash.js Player</title>
+
+    <link rel="icon" type="image/x-icon" href="./assets/img/favicon.ico">
+    <link href="./assets/player-styles.css" rel="stylesheet"></head>
+
+    <!-- Shaka Player compiled library: -->
+    <script src="./lib/shaka/shaka-player.compiled.js"></script>
+    <script src="./lib/shaka/goog/base.js"></script>
+    <script src="./lib/shaka/deps.js"></script>
+
+    <!-- CAPH Dependecies -->
+    <script src="./lib/jquery.min.js"></script>
+    <script src="./lib/lodash.min.js"></script>
+    <script src="./lib/caph-jquery.js"></script>
+
+    <!-- CAPH Dash.js MediaPlayer source: -->
+    <script src="./src/caphDashjsPlayer.js"></script>
+
+</head>
+<body>
+    <div id="player"></div>
+
+    <script type="text/javascript">
+        var manifestUri = 'https://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd';
+
+        $('#player').caphDashjsPlayer({
+            uri : manifestUri
+        });
+    </script>
+</body>
+</html>

@@ -141,6 +141,7 @@
 
         });
         playButton.on('selected', function() {
+            if(!video_) return;
             playButton.hasClass('icon-play') ? video_.play() : video_.pause();
             playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
         });
@@ -162,22 +163,63 @@
             id : 'video',
             width : '1920px',
             height : '1080px',
-            autoplay: 'true'
+            //autoplay: 'true'
         }).appendTo(root_);
 
         var events = {
+            //Fires when the loading of an audio/video is aborted
+            abort: function abort() {
+
+            },
+            //Fires when the audio/video has been started or is no longer paused
+            play: function play() {
+                console.log('video event [play]');
+                //playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
+            },
+            //Fires when the audio/video is playing after having been paused or stopped for buffering
+            playing: function playing() {
+                console.log('video event [playing]');
+
+            },
+            //Fires when the audio/video has been paused
+            pause: function pause() {
+                console.log('video event [pause]');
+            },
+            //Fires when the video stops because it needs to buffer the next frame
+            waiting: function waiting() {
+                console.log('video event [waiting]');
+            },
+            //Fires when the browser is downloading the audio/video
+            process: function process() {
+                console.log('video event [process]');
+            },
+            //Fires when the browser has loaded meta data for the audio/video
             loadedmetadata: function loadedmetadata() {
                 durationTime.text(formatTime(qVideo_[0].duration));
+            },
+            //Fires when the browser has loaded the current frame of the audio/video
+            loadeddata: function loadeddata() {
+                video_.play();
                 playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
             },
+            //Fires when the current playback position has changed
             timeupdate : function timeupdate(){
                 currentTime.text(formatTime(qVideo_[0].currentTime));
                 processTransform(playProcess, qVideo_[0].currentTime/qVideo_[0].duration);
                 processTransform(loadProcess, qVideo_[0].buffered.end(0)/qVideo_[0].duration);
+            },
+            //Fires when an error occurred during the loading of an audio/video
+            error: function error() {
+                console.log('video event [error]');
+            },
+            //Fires when the current playlist is ended
+            ended: function ended() {
+                console.log('video event [ended]');
+                playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
             }
         }
         
-        qVideo_.on('loadedmetadata timeupdate', function (event) {
+        qVideo_.on('play playing pause waiting process loadedmetadata loadeddata timeupdate error ended', function (event) {
             //console.log(event.type);
             events[event.type]();
         });

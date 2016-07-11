@@ -87,6 +87,11 @@
             transform: 'translate3d(' + (value * PROCESS_BAR_MAX_WIDTH - PROCESS_BAR_MAX_WIDTH) + 'px, 0, 0)'
         });
     };
+    function processThumbTransform(value) {
+        $('.process-thumb').css({
+            transform: 'translate3d(' + (value * PROCESS_BAR_MAX_WIDTH) + 'px, 0, 0)'
+        });
+    }
 
     function createUI (rootNode) {
         var root_ = rootNode;
@@ -98,6 +103,14 @@
         var processBar = $('<div/>', {
             class : 'process-bar-area'
         });
+
+        /*var processThumb = $('<div/>', {
+            class: 'process-thumb',
+            focusable: ''
+        });
+        processBar.append(processThumb);*/
+
+        // create process bar
         var processLine= $('<div/>', {
             class : 'process'
         });
@@ -130,32 +143,57 @@
         var buttonsArea = $('<div/>', {
             class : 'buttons-area'
         });
-        var preButton = $('<div/>', {
-            class : 'button icon-previous',
-            'focusable': ''
-        });
 
-        var playButton = $('<div/>', {
-            class : 'button icon-play',
+        var preButton = $('<div/>', {
+            class : 'button fa fa-step-backward',
             focusable: ''
+        });
+        var backwardButton = $('<div/>', {
+            class : 'button fa fa-backward',
+            focusable: ''
+        });
+        var forwardButton = $('<div/>', {
+            class : 'button fa fa-forward',
+            focusable: ''
+        });
+        var playButton = $('<div/>', {
+            class : 'button fa fa-play',
+            focusable: '',
+            'data-focusable-initial-focus': true
 
         });
         playButton.on('selected', function() {
             if(!video_) return;
-            playButton.hasClass('icon-play') ? video_.play() : video_.pause();
-            playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
+            playButton.hasClass('fa-play') ? video_.play() : video_.pause();
+            playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
         });
-
         var nextButton = $('<div/>', {
-            class : 'button icon-next',
+            class : 'button fa fa-step-forward',
             focusable: ''
         });
+        
         buttonsArea.append(preButton);
+        buttonsArea.append(backwardButton);
         buttonsArea.append(playButton);
+        buttonsArea.append(forwardButton);
         buttonsArea.append(nextButton);
 
-        contorlBar.append(buttonsArea);
+        var settingbuttonsArea = $('<div/>', {
+            class : 'set-buttons-area'
+        }).appendTo(contorlBar);        
+        var settingButton = $('<div/>', {
+            class : 'button fa fa-cog',
+            style: 'margin:0px 10px;float: right;',
+            focusable: ''
+        }).appendTo(settingbuttonsArea);
+        var subtitleButton = $('<div/>', {
+            class : 'button fa fa-cc',
+            style: 'margin:0px 10px;float: right;',
+            focusable: ''
+        }).appendTo(settingbuttonsArea);
 
+
+        contorlBar.append(buttonsArea);
         barElement.append(processBar);
         barElement.append(contorlBar);
         
@@ -164,6 +202,10 @@
             width : '1920px',
             height : '1080px',
             //autoplay: 'true'
+        }).appendTo(root_);
+
+        var infoElement = $('<div/>', {
+            class: 'infobars'
         }).appendTo(root_);
 
         var events = {
@@ -200,13 +242,15 @@
             //Fires when the browser has loaded the current frame of the audio/video
             loadeddata: function loadeddata() {
                 video_.play();
-                playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
+                playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
             },
             //Fires when the current playback position has changed
             timeupdate : function timeupdate(){
                 currentTime.text(formatTime(qVideo_[0].currentTime));
+                infoElement.text(qVideo_[0].videoWidth + ' x ' + qVideo_[0].videoHeight);
                 processTransform(playProcess, qVideo_[0].currentTime/qVideo_[0].duration);
                 processTransform(loadProcess, qVideo_[0].buffered.end(0)/qVideo_[0].duration);
+                processThumbTransform(qVideo_[0].currentTime/qVideo_[0].duration);
             },
             //Fires when an error occurred during the loading of an audio/video
             error: function error() {
@@ -215,7 +259,7 @@
             //Fires when the current playlist is ended
             ended: function ended() {
                 console.log('video event [ended]');
-                playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
+                playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
             }
         }
         
@@ -241,16 +285,17 @@
         initApp(options.uri);
 
     };
-
     $(document).ready(function() {
+        
+
         $.caph.focus.activate(function(nearestFocusableFinderProvider, controllerProvider){
 
             controllerProvider.onSelected(function (event, originalEvent) {
                 
                 var target = $(event.currentTarget);
-                if(target.hasClass('icon-play')) {
+                if(target.hasClass('fa-play')) {
                     //console.log(event.currentTarget);
-                    $('icon-play').trigger('select');
+                    $('fa-play').trigger('select');
                 }
 
             });

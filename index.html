@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <title>CAPH Dash.js Player</title>
 
-    <link rel="icon" type="image/x-icon" href="./assets/img/favicon.ico">
-    <link href="./assets/player-styles.css" rel="stylesheet"></head>
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+    <link rel="stylesheet" href="./assets/font-awesome-4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./assets/player-styles.css">
 
     <!-- Shaka Player compiled library: -->
     <script src="./lib/shaka/shaka-player.compiled.js"></script>
@@ -26,7 +27,8 @@
 
     <script type="text/javascript">
         var manifestUri = 'https://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd';
-        var fourKUri = 'https://yt-dash-mse-test.commondatastorage.googleapis.com/media/oops_cenc-20121114-signedlicenseurl-manifest.mpd';
+        var fourKUri = 'https://storage.googleapis.com/shaka-demo-assets/sintel/dash.mpd';
+        
         $('#player').caphDashjsPlayer({
             uri : manifestUri
         });

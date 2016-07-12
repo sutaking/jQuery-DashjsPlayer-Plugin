@@ -133,16 +133,17 @@ a {
 
 .controls-bar .buttons-area {
     position: relative;
-    width: 720px;
-    height: 80px;
     margin: 0 auto;
-    /*border: 1px dashed rgba(150, 153, 159, 0.9);*/
+    /*width: 700px;*/
+    width: 420px;
+    height: 80px;
 }
 
 .controls-bar .set-buttons-area {
     position: absolute;
+    top: 0px;
     right: 0px;
-    width: 480px;
+    width: 280px;
     height: 80px;
 }
 
@@ -163,39 +164,23 @@ a {
     background-color: rgba(150, 153, 159, .7);
 }
 
-
-/* 
-    Information DIV
-*/
-.info-container{
+.player-loader {
     position: absolute;
-    top: 850px;
-    width: 1920px;
-    height: 230px;
-    /*background-color: rgba(243, 231, 191, 0.3);
-    border: 1px dashed rgba(150, 153, 159, 0.9);*/
+    left: 900px;
+    margin: 490px auto;
+    width: 80px;
+    height: 80px;
+    /*border-radius: 100%;
+    border: 10px solid rgba(255,255,255,.2);
+    border-left-color: #FFF;
+    -webkit-animation: load 1.5s infinite linear;*/
 }
-
-.info-container .ch-container {
-    position: absolute;
-    width: 1900px;
-    height: 200px;
-    overflow: hidden;
-}
-
-.info-container .wrapper{
-    top: 1px;
-}
-
-.info-container .item{
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    -webkit-box-sizing: border-box;
-    margin: 0 0px 0 0;
-    border: 4px solid rgba(243, 231, 191, .1);
-}
-
-.item.focused{
-    border: 4px solid white;
-}
+/*
+@-webkit-keyframes load {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}*/

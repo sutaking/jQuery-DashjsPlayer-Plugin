@@ -56,6 +56,14 @@
       console.error('Error code', error.code, 'object', error);
     }
 
+    function seekBar(type, currentTime, playProcess) {
+        if(type === 'forward') { video_.currentTime += 15;}
+        else{ video_.currentTime -= 15; }
+
+        currentTime.text(formatTime(video_.currentTime));
+        processTransform(playProcess, video_.currentTime/video_.duration);
+    }
+
     function stringToHHMMSS(data) {
         var sec_num = parseInt(data + '', 10);
         var hours = Math.floor(sec_num / 3600);
@@ -87,22 +95,29 @@
             transform: 'translate3d(' + (value * PROCESS_BAR_MAX_WIDTH - PROCESS_BAR_MAX_WIDTH) + 'px, 0, 0)'
         });
     };
-    function processThumbTransform(value) {
+    /*function processThumbTransform(value) {
         $('.process-thumb').css({
             transform: 'translate3d(' + (value * PROCESS_BAR_MAX_WIDTH) + 'px, 0, 0)'
         });
-    }
+    }*/
 
     function createUI (rootNode) {
         var root_ = rootNode;
         
+        var loaderElement = $('<div/>', {
+            class: 'player-loader',//'player-loader',
+        }).appendTo(root_);
+        $('<i/>', {
+            class: 'fa fa-spinner fa-pulse fa-5x fa-fw'
+        }).appendTo(loaderElement);
+
         var barElement = $('<div/>', {
             class: 'bars'
-        });
+        }).appendTo(root_);
 
         var processBar = $('<div/>', {
             class : 'process-bar-area'
-        });
+        }).appendTo(barElement);
 
         /*var processThumb = $('<div/>', {
             class: 'process-thumb',
@@ -110,79 +125,83 @@
         });
         processBar.append(processThumb);*/
 
-        // create process bar
+        /* 
+        *   create process bar
+        */
         var processLine= $('<div/>', {
             class : 'process'
-        });
-        var loadProcess = $('<div/>', {
-            class : 'load'
-        });
-        var playProcess = $('<div/>', {
-            class : 'play'
-        });
-        processLine.append(loadProcess);
-        processLine.append(playProcess);
-
+        }).appendTo(processBar);
         var currentTime = $('<div/>', {
             text : '00:00',
             id : 'current-time',
             class : 'time current'
-        });
+        }).appendTo(processBar);
         var durationTime = $('<div/>', {
             text : '00:00',
             id : 'duration-time',
             class : 'time duration'
-        });
-        processBar.append(processLine);
-        processBar.append(currentTime);
-        processBar.append(durationTime);
+        }).appendTo(processBar);
 
+        var loadProcess = $('<div/>', {
+            class : 'load'
+        }).appendTo(processLine);
+        var playProcess = $('<div/>', {
+            class : 'play'
+        }).appendTo(processLine);
+
+        /*
+        *   control bar
+        */
         var contorlBar = $('<div/>', {
             class : 'controls-bar'
-        });
+        }).appendTo(barElement);
         var buttonsArea = $('<div/>', {
             class : 'buttons-area'
-        });
+        }).appendTo(contorlBar);
 
-        var preButton = $('<div/>', {
+        /*
+        *   video player control buttons
+        */
+        /*var preButton = $('<div/>', {
             class : 'button fa fa-step-backward',
             focusable: ''
-        });
+        }).appendTo(buttonsArea);*/
         var backwardButton = $('<div/>', {
             class : 'button fa fa-backward',
             focusable: ''
-        });
-        var forwardButton = $('<div/>', {
-            class : 'button fa fa-forward',
-            focusable: ''
-        });
+        }).on('selected', function() {
+            console.log('fa-backward selected');
+            seekBar('backward',currentTime, playProcess)
+        }).appendTo(buttonsArea);        
         var playButton = $('<div/>', {
             class : 'button fa fa-play',
             focusable: '',
             'data-focusable-initial-focus': true
-
-        });
-        playButton.on('selected', function() {
+        }).on('selected', function() {
             if(!video_) return;
             playButton.hasClass('fa-play') ? video_.play() : video_.pause();
             playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
-        });
-        var nextButton = $('<div/>', {
+        }).appendTo(buttonsArea);
+        var forwardButton = $('<div/>', {
+            class : 'button fa fa-forward',
+            focusable: ''
+        }).on('selected', function() {
+            console.log('fa-forward selected');
+            seekBar('forward',currentTime, playProcess)
+        }).appendTo(buttonsArea);
+        /*var nextButton = $('<div/>', {
             class : 'button fa fa-step-forward',
             focusable: ''
-        });
-        
-        buttonsArea.append(preButton);
-        buttonsArea.append(backwardButton);
-        buttonsArea.append(playButton);
-        buttonsArea.append(forwardButton);
-        buttonsArea.append(nextButton);
+        }).appendTo(buttonsArea);*/
 
+        /*
+        * right toolbar buttons
+        */
         var settingbuttonsArea = $('<div/>', {
             class : 'set-buttons-area'
         }).appendTo(contorlBar);        
         var settingButton = $('<div/>', {
-            class : 'button fa fa-cog',
+            class : 'button fa fa-ellipsis-h',
             style: 'margin:0px 10px;float: right;',
             focusable: ''
         }).appendTo(settingbuttonsArea);
@@ -191,84 +210,92 @@
             style: 'margin:0px 10px;float: right;',
             focusable: ''
         }).appendTo(settingbuttonsArea);
-
-
-        contorlBar.append(buttonsArea);
-        barElement.append(processBar);
-        barElement.append(contorlBar);
         
-        var qVideo_ = $('<video/>', {
+        /*
+        *   video element
+        */
+        $('<video/>', {
             id : 'video',
             width : '1920px',
             height : '1080px',
-            //autoplay: 'true'
+        }).on('play playing pause waiting process loadedmetadata loadeddata timeupdate error ended', function (event) {
+            //console.log(this);
+            var self = this;
+            var events = {
+                //Fires when the loading of an audio/video is aborted
+                abort: function () {
+                    console.log('video event [abort]');
+                    loaderElement.show();
+                },
+                //Fires when the audio/video has been started or is no longer paused
+                play: function () {
+                    console.log('video event [play]');                
+                    //playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
+                },
+                //Fires when the audio/video is playing after having been paused or stopped for buffering
+                playing: function () {
+                    console.log('video event [playing]');
+                    loaderElement.hide();
+                },
+                //Fires when the audio/video has been paused
+                pause: function () {
+                    console.log('video event [pause]');
+                },
+                //Fires when the video stops because it needs to buffer the next frame
+                waiting: function () {
+                    console.log('video event [waiting]');
+                    loaderElement.show();
+                },
+                //Fires when the browser is downloading the audio/video
+                process: function () {
+                    loaderElement.show();
+                    console.log('video event [process]');
+                },
+                //Fires when the browser has loaded meta data for the audio/video
+                loadedmetadata: function () {
+                    console.log('video event [loadedmetadata]');
+                    durationTime.text(formatTime($(self)[0].duration));
+                },
+                //Fires when the browser has loaded the current frame of the audio/video
+                loadeddata: function () {
+                    console.log('video event [loadeddata]');
+                    loaderElement.hide();
+                    video_.play();
+                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                },
+                //Fires when the current playback position has changed
+                timeupdate : function (){
+                    currentTime.text(formatTime($(self)[0].currentTime));
+                    infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
+                    processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);
+                    processTransform(loadProcess, $(self)[0].buffered.end(0)/$(self)[0].duration);
+                },
+                //Fires when an error occurred during the loading of an audio/video
+                error: function () {
+                    console.log('video event [error]');
+                },
+                //Fires when the current playlist is ended
+                ended: function () {
+                    console.log('video event [ended]');
+                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                }
+            };
+            events[event.type]();
         }).appendTo(root_);
 
+        //show video resolution in real time
         var infoElement = $('<div/>', {
             class: 'infobars'
         }).appendTo(root_);
-
-        var events = {
-            //Fires when the loading of an audio/video is aborted
-            abort: function abort() {
-
-            },
-            //Fires when the audio/video has been started or is no longer paused
-            play: function play() {
-                console.log('video event [play]');
-                //playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
-            },
-            //Fires when the audio/video is playing after having been paused or stopped for buffering
-            playing: function playing() {
-                console.log('video event [playing]');
-
-            },
-            //Fires when the audio/video has been paused
-            pause: function pause() {
-                console.log('video event [pause]');
-            },
-            //Fires when the video stops because it needs to buffer the next frame
-            waiting: function waiting() {
-                console.log('video event [waiting]');
-            },
-            //Fires when the browser is downloading the audio/video
-            process: function process() {
-                console.log('video event [process]');
-            },
-            //Fires when the browser has loaded meta data for the audio/video
-            loadedmetadata: function loadedmetadata() {
-                durationTime.text(formatTime(qVideo_[0].duration));
-            },
-            //Fires when the browser has loaded the current frame of the audio/video
-            loadeddata: function loadeddata() {
-                video_.play();
-                playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
-            },
-            //Fires when the current playback position has changed
-            timeupdate : function timeupdate(){
-                currentTime.text(formatTime(qVideo_[0].currentTime));
-                infoElement.text(qVideo_[0].videoWidth + ' x ' + qVideo_[0].videoHeight);
-                processTransform(playProcess, qVideo_[0].currentTime/qVideo_[0].duration);
-                processTransform(loadProcess, qVideo_[0].buffered.end(0)/qVideo_[0].duration);
-                processThumbTransform(qVideo_[0].currentTime/qVideo_[0].duration);
-            },
-            //Fires when an error occurred during the loading of an audio/video
-            error: function error() {
-                console.log('video event [error]');
-            },
-            //Fires when the current playlist is ended
-            ended: function ended() {
-                console.log('video event [ended]');
-                playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
-            }
-        }
         
-        qVideo_.on('play playing pause waiting process loadedmetadata loadeddata timeupdate error ended', function (event) {
-            //console.log(event.type);
-            events[event.type]();
-        });
+    };
 
-        root_.append(barElement);
+    function player(dom, options) {
+        var ctrl = new demoControl();
+        ctrl.init();
+
+        createUI($(dom));
+        initApp(options.uri);
     };
 
     $.fn.caphDashjsPlayer = function(options) {
@@ -279,14 +306,12 @@
         };
 
         var options = $.extend(defaults, options);
-        console.log(options);
+        //console.log(options);
 
-        createUI($(this));
-        initApp(options.uri);
-
+        return new player(this, options);
     };
+
     $(document).ready(function() {
-        
 
         $.caph.focus.activate(function(nearestFocusableFinderProvider, controllerProvider){
 
@@ -297,9 +322,26 @@
                     //console.log(event.currentTarget);
                     $('fa-play').trigger('select');
                 }
-
-            });
-
+                else if(target.hasClass('fa-step-backward')) {
+                    console.log('fa-step-backward');
+                }
+                else if(target.hasClass('fa-backward')) {
+                    console.log('fa-backward');
+                }
+                else if(target.hasClass('fa-forward')) {
+                    //seekBar();
+                    console.log('fa-forward');
+                }
+                else if(target.hasClass('fa-step-forward')) {
+                    console.log('fa-step-forward');
+                }
+                else if(target.hasClass('fa-cog')) {
+                    console.log('setting');
+                }
+                else if(target.hasClass('fa-cc')) {
+                    console.log('subtitle');
+                }
+            });    
         });
     });
 

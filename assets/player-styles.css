@@ -4,7 +4,7 @@ blockquote, body, button, dd, dl, dt, fieldset, form, h1, h2, h3, h4, h5, h6, hr
 }
 
 body {
-    background: #000000;
+    background: white;
     color: #fff;
     overflow: hidden;
 }
@@ -17,6 +17,7 @@ a {
     position: absolute;
     width: 1920px;
     height: 1080px;
+    background-color: #000;
 }
 
 .infobars {
@@ -175,6 +176,11 @@ a {
     border-left-color: #FFF;
     -webkit-animation: load 1.5s infinite linear;*/
 }
+
+video::-webkit-media-text-track-display {
+  font-size: 200%;
+}
+
 /*
 @-webkit-keyframes load {
     from {

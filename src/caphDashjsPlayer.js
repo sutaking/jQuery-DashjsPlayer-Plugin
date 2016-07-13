@@ -4,6 +4,7 @@
     var PROCESS_BAR_MAX_WIDTH = 1400;
 
     var video_;
+    var player_;
 
     function initApp(uri) {
       // Install built-in polyfills to patch browser incompatibilities.
@@ -33,6 +34,7 @@
 
       // Attach player to the window to make it easy to access in the JS console.
       window.player = player;
+      player_ = player;
 
       // Listen for error events.
       player.addEventListener('error', onErrorEvent);
@@ -209,6 +211,15 @@
             class : 'button fa fa-cc',
             style: 'margin:0px 10px;float: right;',
             focusable: ''
+        }).on('selected', function(){
+            if (window.player.isTextTrackVisible()) {
+                $(this).css({color: 'white'});
+                window.player.setTextTrackVisibility(false);
+            } else {
+                // Make the button look darker to show that the text track is inactive.
+                $(this).css({color: 'rgba(255, 255, 255, 0.3)'});
+                window.player.setTextTrackVisibility(!window.player.isTextTrackVisible());
+            }
         }).appendTo(settingbuttonsArea);
         
         /*
@@ -236,6 +247,7 @@
                 playing: function () {
                     console.log('video event [playing]');
                     loaderElement.hide();
+                    
                 },
                 //Fires when the audio/video has been paused
                 pause: function () {

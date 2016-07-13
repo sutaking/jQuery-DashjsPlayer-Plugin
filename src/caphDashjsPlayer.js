@@ -3,8 +3,7 @@
 
     var PROCESS_BAR_MAX_WIDTH = 1400;
 
-    var video_;
-    var player_;
+    var video_, player_, timeId;
 
     function initApp(uri) {
       // Install built-in polyfills to patch browser incompatibilities.
@@ -59,6 +58,8 @@
     }
 
     function seekBar(type, currentTime, playProcess) {
+        clearInterval(timeId);
+        
         if(type === 'forward') { video_.currentTime += 15;}
         else{ video_.currentTime -= 15; }
 
@@ -173,7 +174,8 @@
             focusable: ''
         }).on('selected', function() {
             console.log('fa-backward selected');
-            seekBar('backward',currentTime, playProcess)
+            
+            timeId = setInterval(seekBar('backward',currentTime, playProcess), 100);
         }).appendTo(buttonsArea);        
         var playButton = $('<div/>', {
             class : 'button fa fa-play',
@@ -189,7 +191,8 @@
             focusable: ''
         }).on('selected', function() {
             console.log('fa-forward selected');
-            seekBar('forward',currentTime, playProcess)
+
+            timeId = setInterval(seekBar('forward',currentTime, playProcess), 100);
         }).appendTo(buttonsArea);
         /*var nextButton = $('<div/>', {
             class : 'button fa fa-step-forward',
@@ -206,6 +209,9 @@
             class : 'button fa fa-ellipsis-h',
             style: 'margin:0px 10px;float: right;',
             focusable: ''
+        }).on('selected', function() {
+            var tracks = window.player.getTracks();
+            console.log(tracks);
         }).appendTo(settingbuttonsArea);
         var subtitleButton = $('<div/>', {
             class : 'button fa fa-cc',
@@ -332,26 +338,25 @@
                 var target = $(event.currentTarget);
                 if(target.hasClass('fa-play')) {
                     //console.log(event.currentTarget);
-                    $('fa-play').trigger('select');
                 }
                 else if(target.hasClass('fa-step-backward')) {
-                    console.log('fa-step-backward');
+                    //console.log('fa-step-backward');
                 }
                 else if(target.hasClass('fa-backward')) {
-                    console.log('fa-backward');
+                    //console.log('fa-backward');
                 }
                 else if(target.hasClass('fa-forward')) {
                     //seekBar();
-                    console.log('fa-forward');
+                    //console.log('fa-forward');
                 }
                 else if(target.hasClass('fa-step-forward')) {
-                    console.log('fa-step-forward');
+                    //console.log('fa-step-forward');
                 }
                 else if(target.hasClass('fa-cog')) {
-                    console.log('setting');
+                    //console.log('setting');
                 }
                 else if(target.hasClass('fa-cc')) {
-                    console.log('subtitle');
+                    //console.log('subtitle');
                 }
             });    
         });

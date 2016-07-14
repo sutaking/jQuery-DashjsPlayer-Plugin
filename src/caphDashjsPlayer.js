@@ -3,7 +3,7 @@
 
     var PROCESS_BAR_MAX_WIDTH = 1400;
 
-    var video_, player_, timeId;
+    var video_, player_, timeId_, seekTimeValue_, textTracks_ ={}, videoTracks_={}, audioTracks_={};
 
     function initApp(uri) {
       // Install built-in polyfills to patch browser incompatibilities.
@@ -57,14 +57,24 @@
       console.error('Error code', error.code, 'object', error);
     }
 
-    function seekBar(type, currentTime, playProcess) {
-        clearInterval(timeId);
-        
-        if(type === 'forward') { video_.currentTime += 15;}
-        else{ video_.currentTime -= 15; }
+    function onSeekTime_(val) {
+        //console.log('seektime: '+val);
+        timeId_ = null;
+        video_.currentTime = val;
+    }
 
-        currentTime.text(formatTime(video_.currentTime));
-        processTransform(playProcess, video_.currentTime/video_.duration);
+    function seekPlayTime(type, currentTime, playProcess) {
+
+        //1st update UI right way
+        var seekValue = video_.currentTime;
+        if(type === 'forward') { seekValue += 15;}
+        else{ seekValue -= 15;}
+        currentTime.text(formatTime(seekValue));
+        processTransform(playProcess, seekValue/video_.duration);
+
+        // collect input evnets and seek.
+        if(timeId_ != null) {clearInterval(timeId_);}
+        timeId_ = setInterval(onSeekTime_(seekValue), 100);
     }
 
     function stringToHHMMSS(data) {
@@ -103,6 +113,38 @@
             transform: 'translate3d(' + (value * PROCESS_BAR_MAX_WIDTH) + 'px, 0, 0)'
         });
     }*/
+    function saveMediaTracks(tarcks) {
+
+        tarcks.forEach(function(item, index) {
+            switch(item.type){
+                case 'text':
+                    textTracks_[item.language] = item;
+                    break;
+                case 'video':
+                    videoTracks_[item.width] = item;
+                    break;
+                case 'audio':
+                    audioTracks_[item.language] = item;
+                    break;
+                default:
+                    console.log('unknow tracks type')
+                    break;
+            }
+        });
+    };
+
+    function findTracks(type, key) {
+        switch(type){
+            case 'text':
+                return textTracks_[key];
+            case 'video':
+                return videoTracks_[key];
+            case 'audio':
+                return audioTracks_[key];
+            default:
+                return;
+        }
+    }
 
     function createUI (rootNode) {
         var root_ = rootNode;
@@ -175,7 +217,7 @@
         }).on('selected', function() {
             console.log('fa-backward selected');
             
-            timeId = setInterval(seekBar('backward',currentTime, playProcess), 100);
+            seekPlayTime('backward',currentTime, playProcess);
         }).appendTo(buttonsArea);        
         var playButton = $('<div/>', {
             class : 'button fa fa-play',
@@ -192,7 +234,7 @@
         }).on('selected', function() {
             console.log('fa-forward selected');
 
-            timeId = setInterval(seekBar('forward',currentTime, playProcess), 100);
+            seekPlayTime('forward',currentTime, playProcess);
         }).appendTo(buttonsArea);
         /*var nextButton = $('<div/>', {
             class : 'button fa fa-step-forward',
@@ -210,8 +252,10 @@
             style: 'margin:0px 10px;float: right;',
             focusable: ''
         }).on('selected', function() {
-            var tracks = window.player.getTracks();
-            console.log(tracks);
+             //textTracks_, videoTracks_, audioTracks_
+             console.log(textTracks_);
+             console.log(videoTracks_);
+             console.log(audioTracks_);
         }).appendTo(settingbuttonsArea);
         var subtitleButton = $('<div/>', {
             class : 'button fa fa-cc',
@@ -226,6 +270,10 @@
                 $(this).css({color: 'rgba(255, 255, 255, 0.3)'});
                 window.player.setTextTrackVisibility(!window.player.isTextTrackVisible());
             }
+            
+            var track_ = findTracks('text', 'en');
+            track_ ? window.player.selectTrack(track_, true): null;
+
         }).appendTo(settingbuttonsArea);
         
         /*
@@ -253,7 +301,6 @@
                 playing: function () {
                     console.log('video event [playing]');
                     loaderElement.hide();
-                    
                 },
                 //Fires when the audio/video has been paused
                 pause: function () {
@@ -273,6 +320,7 @@
                 loadedmetadata: function () {
                     console.log('video event [loadedmetadata]');
                     durationTime.text(formatTime($(self)[0].duration));
+                    saveMediaTracks(window.player.getTracks());
                 },
                 //Fires when the browser has loaded the current frame of the audio/video
                 loadeddata: function () {

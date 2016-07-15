@@ -5,26 +5,9 @@
 
     var video_, player_, timeId_, seekTimeValue_, textTracks_ ={}, videoTracks_={}, audioTracks_={};
 
-    function initApp(uri) {
-      // Install built-in polyfills to patch browser incompatibilities.
-      console.log('Application Start!');
-      shaka.polyfill.installAll();
-
-      // Check to see if the browser supports the basic APIs Shaka needs.
-      // This is an asynchronous check.
-      shaka.Player.support().then(function(support) {
-        // This executes when the asynchronous check is complete.
-        if (support.supported) {
-          // Everything looks good!
-          initPlayer(uri);
-          console.log('TV is supported!');
-        } else {
-          // This browser does not have the minimum set of APIs we need.
-          console.error('Browser not supported!');
-        }
-      });
-    }
-
+    /*
+    *   create ShakaPlayer Object and bind media element
+    */
     function initPlayer(manifestUri) {
       // Create a Player instance.
       video_ = document.getElementById('video');
@@ -47,22 +30,55 @@
       }).catch(onError);  // onError is executed if the asynchronous load fails.
     }
 
+    /*
+    *   init ShakaPlayer Object
+    */
+    function initApp(uri) {
+      // Install built-in polyfills to patch browser incompatibilities.
+      console.log('Application Start!');
+      shaka.polyfill.installAll();
+
+      // Check to see if the browser supports the basic APIs Shaka needs.
+      // This is an asynchronous check.
+      shaka.Player.support().then(function(support) {
+        // This executes when the asynchronous check is complete.
+        if (support.supported) {
+          // Everything looks good!
+          initPlayer(uri);
+          console.log('TV is supported!');
+        } else {
+          // This browser does not have the minimum set of APIs we need.
+          console.error('Browser not supported!');
+        }
+      });
+    }
+
+    /*
+    *   Extract the shaka.util.Error object from the event.
+    */
     function onErrorEvent(event) {
-      // Extract the shaka.util.Error object from the event.
       onError(event.detail);
     }
 
+    /*
+    *   Log the error.
+    */
     function onError(error) {
-      // Log the error.
       console.error('Error code', error.code, 'object', error);
     }
 
+    /*
+    *   seek media source current time.
+    */
     function onSeekTime_(val) {
         //console.log('seektime: '+val);
         timeId_ = null;
         video_.currentTime = val;
     }
 
+    /*
+    *   prepare seek media source by timeout
+    */
     function seekPlayTime(type, currentTime, playProcess) {
 
         //1st update UI right way
@@ -77,6 +93,9 @@
         timeId_ = setInterval(onSeekTime_(seekValue), 100);
     }
 
+    /*
+    *   format time object to hours, minutes, seconds
+    */
     function stringToHHMMSS(data) {
         var sec_num = parseInt(data + '', 10);
         var hours = Math.floor(sec_num / 3600);
@@ -94,6 +113,9 @@
         return [hours, minutes, seconds];
     };
 
+    /*
+    *   format time object to string
+    */
     function formatTime (sec) {
         //console.log(sec);
         var array = stringToHHMMSS(sec);
@@ -103,16 +125,18 @@
         return sec ? array[1] + ':' + array[2] : '00:00';
     };
 
+    /*
+    *   translate progress bar
+    */
     function processTransform(line, value) {
         $(line).css({
             transform: 'translate3d(' + (value * PROCESS_BAR_MAX_WIDTH - PROCESS_BAR_MAX_WIDTH) + 'px, 0, 0)'
         });
     };
-    /*function processThumbTransform(value) {
-        $('.process-thumb').css({
-            transform: 'translate3d(' + (value * PROCESS_BAR_MAX_WIDTH) + 'px, 0, 0)'
-        });
-    }*/
+
+    /*
+    *   save media source tracks
+    */
     function saveMediaTracks(tarcks) {
 
         tarcks.forEach(function(item, index) {
@@ -133,6 +157,9 @@
         });
     };
 
+    /*
+    *   get tracks from local save data.
+    */
     function findTracks(type, key) {
         switch(type){
             case 'text':
@@ -146,11 +173,87 @@
         }
     }
 
+    /*
+    *   create player's UI template
+    */
     function createUI (rootNode) {
         var root_ = rootNode;
+
+        /*
+        *   video element
+        */
+        $('<video/>', {
+            id : 'video',
+            width : '1920px',
+            height : '1080px',
+        }).on('play playing pause waiting process loadedmetadata loadeddata timeupdate error ended', function (event) {
+            //console.log(this);
+            var self = this;
+            var events = {
+                //Fires when the loading of an audio/video is aborted
+                abort: function () {
+                    console.log('video event [abort]');
+                    loaderElement.show();
+                },
+                //Fires when the audio/video has been started or is no longer paused
+                play: function () {
+                    console.log('video event [play]');                
+                    //playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
+                },
+                //Fires when the audio/video is playing after having been paused or stopped for buffering
+                playing: function () {
+                    console.log('video event [playing]');
+                    loaderElement.hide();
+                },
+                //Fires when the audio/video has been paused
+                pause: function () {
+                    console.log('video event [pause]');
+                },
+                //Fires when the video stops because it needs to buffer the next frame
+                waiting: function () {
+                    console.log('video event [waiting]');
+                    loaderElement.show();
+                },
+                //Fires when the browser is downloading the audio/video
+                process: function () {
+                    loaderElement.show();
+                    console.log('video event [process]');
+                },
+                //Fires when the browser has loaded meta data for the audio/video
+                loadedmetadata: function () {
+                    console.log('video event [loadedmetadata]');
+                    durationTime.text(formatTime($(self)[0].duration));
+                    saveMediaTracks(window.player.getTracks());
+                },
+                //Fires when the browser has loaded the current frame of the audio/video
+                loadeddata: function () {
+                    console.log('video event [loadeddata]');
+                    loaderElement.hide();
+                    video_.play();
+                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                },
+                //Fires when the current playback position has changed
+                timeupdate : function (){
+                    currentTime.text(formatTime($(self)[0].currentTime));
+                    infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
+                    processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);
+                    processTransform(loadProcess, $(self)[0].buffered.end(0)/$(self)[0].duration);
+                },
+                //Fires when an error occurred during the loading of an audio/video
+                error: function () {
+                    console.log('video event [error]');
+                },
+                //Fires when the current playlist is ended
+                ended: function () {
+                    console.log('video event [ended]');
+                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                }
+            };
+            events[event.type]();
+        }).appendTo(root_);
         
         var loaderElement = $('<div/>', {
-            class: 'player-loader',//'player-loader',
+            class: 'player-loader',
         }).appendTo(root_);
         $('<i/>', {
             class: 'fa fa-spinner fa-pulse fa-5x fa-fw'
@@ -163,12 +266,6 @@
         var processBar = $('<div/>', {
             class : 'process-bar-area'
         }).appendTo(barElement);
-
-        /*var processThumb = $('<div/>', {
-            class: 'process-thumb',
-            focusable: ''
-        });
-        processBar.append(processThumb);*/
 
         /* 
         *   create process bar
@@ -257,6 +354,8 @@
              console.log(videoTracks_);
              console.log(audioTracks_);
         }).appendTo(settingbuttonsArea);
+        
+
         var subtitleButton = $('<div/>', {
             class : 'button fa fa-cc',
             style: 'margin:0px 10px;float: right;',
@@ -275,79 +374,6 @@
             track_ ? window.player.selectTrack(track_, true): null;
 
         }).appendTo(settingbuttonsArea);
-        
-        /*
-        *   video element
-        */
-        $('<video/>', {
-            id : 'video',
-            width : '1920px',
-            height : '1080px',
-        }).on('play playing pause waiting process loadedmetadata loadeddata timeupdate error ended', function (event) {
-            //console.log(this);
-            var self = this;
-            var events = {
-                //Fires when the loading of an audio/video is aborted
-                abort: function () {
-                    console.log('video event [abort]');
-                    loaderElement.show();
-                },
-                //Fires when the audio/video has been started or is no longer paused
-                play: function () {
-                    console.log('video event [play]');                
-                    //playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
-                },
-                //Fires when the audio/video is playing after having been paused or stopped for buffering
-                playing: function () {
-                    console.log('video event [playing]');
-                    loaderElement.hide();
-                },
-                //Fires when the audio/video has been paused
-                pause: function () {
-                    console.log('video event [pause]');
-                },
-                //Fires when the video stops because it needs to buffer the next frame
-                waiting: function () {
-                    console.log('video event [waiting]');
-                    loaderElement.show();
-                },
-                //Fires when the browser is downloading the audio/video
-                process: function () {
-                    loaderElement.show();
-                    console.log('video event [process]');
-                },
-                //Fires when the browser has loaded meta data for the audio/video
-                loadedmetadata: function () {
-                    console.log('video event [loadedmetadata]');
-                    durationTime.text(formatTime($(self)[0].duration));
-                    saveMediaTracks(window.player.getTracks());
-                },
-                //Fires when the browser has loaded the current frame of the audio/video
-                loadeddata: function () {
-                    console.log('video event [loadeddata]');
-                    loaderElement.hide();
-                    video_.play();
-                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
-                },
-                //Fires when the current playback position has changed
-                timeupdate : function (){
-                    currentTime.text(formatTime($(self)[0].currentTime));
-                    infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
-                    processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);
-                    processTransform(loadProcess, $(self)[0].buffered.end(0)/$(self)[0].duration);
-                },
-                //Fires when an error occurred during the loading of an audio/video
-                error: function () {
-                    console.log('video event [error]');
-                },
-                //Fires when the current playlist is ended
-                ended: function () {
-                    console.log('video event [ended]');
-                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
-                }
-            };
-            events[event.type]();
-        }).appendTo(root_);
 
         //show video resolution in real time
         var infoElement = $('<div/>', {
@@ -356,6 +382,9 @@
         
     };
 
+    /*
+    *   start player
+    */
     function player(dom, options) {
         var ctrl = new demoControl();
         ctrl.init();
@@ -381,9 +410,14 @@
 
         $.caph.focus.activate(function(nearestFocusableFinderProvider, controllerProvider){
 
+            controllerProvider.onFocused(function(event, originalEvent){
+                var target = $(event.currentTarget);
+                //console.log(target);
+            });
+
             controllerProvider.onSelected(function (event, originalEvent) {
                 
-                var target = $(event.currentTarget);
+                /*var target = $(event.currentTarget);
                 if(target.hasClass('fa-play')) {
                     //console.log(event.currentTarget);
                 }
@@ -405,7 +439,7 @@
                 }
                 else if(target.hasClass('fa-cc')) {
                     //console.log('subtitle');
-                }
+                }*/
             });    
         });
     });

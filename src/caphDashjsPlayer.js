@@ -64,6 +64,9 @@
     */
     function onError(error) {
         console.error('Error code', error.code, 'object', error);
+        //alert('Error code: '+ error.code);
+        $('#error-dialog-content').text('Error code: '+ error.code);
+        caphPlayer.errorDialog.caphDialog('open');
     }
 
     /*
@@ -153,7 +156,7 @@
                     console.log('unknow tracks type')
                     break;
             }
-        });
+        });        
     };
 
     /*
@@ -162,13 +165,13 @@
     function setTracks(type, key) {
         var t_;
         switch(type){
-            case 'text':
+            case 'Subtitles':
                 t_ = caphPlayer.textTracks[key];
                 break;
-            case 'video':
+            case 'Quality':
                 t_ = caphPlayer.videoTracks[key];
                 break;
-            case 'audio':
+            case 'Audio':
                 t_ = caphPlayer.audioTracks[key];
                 break;
             default:
@@ -284,7 +287,7 @@
                 }).on('selected', function() {
                     //console.log($(this).children('#itemText').text());
                     caphPlayer.menuBar.slideUp();
-                    caphPlayer.tracksList.slideDown();
+                    $('#'+text).slideDown();
                     $.caph.focus.controllerProvider.getInstance().setDepth(2);
                 });
                 $('<div/>', {
@@ -299,22 +302,23 @@
                 return item.appendTo(caphPlayer.menuBar);
             }
 
-            $.isEmptyObject(caphPlayer.textTracks) ? null:createMenuItem('Subtitles');//&createList(caphPlayer.textTracks);
-            $.isEmptyObject(caphPlayer.videoTracks) ? null:createMenuItem('Quality')&createList(caphPlayer.videoTracks);
-            $.isEmptyObject(caphPlayer.audioTracks) ? null:createMenuItem('Audio');//&createList(caphPlayer.audioTracks);
+            $.isEmptyObject(caphPlayer.textTracks) ? null:createMenuItem('Subtitles')&createList('Subtitles',caphPlayer.textTracks);
+            $.isEmptyObject(caphPlayer.videoTracks) ? null:createMenuItem('Quality')&createList('Quality',caphPlayer.videoTracks);
+            $.isEmptyObject(caphPlayer.audioTracks) ? null:createMenuItem('Audio')&createList('Audio',caphPlayer.audioTracks);
         };
         
 
         /*
         *   tracks selected list caphPlayer.videoTracks
         */
-        function createList(data) {
+        function createList(type, data) {
             caphPlayer.tracksList = $('<div/>', {
+                id:type,
                 class: 'track-list',
             }).appendTo(root_).hide()
 
             for(var i in data) {
-                createListItem(i);
+                createListItem(i, type);
             }
             /*$('#list1').caphList({
                 items: data,
@@ -323,15 +327,15 @@
                 containerClass:'track-list'
             });*/
 
-            function createListItem(text) {
+            function createListItem(text, type) {
                 var item = $('<div/>', {
                     class:'list-item',
                     focusable: '',
                     'data-focusable-depth':2
                 }).on('selected', function() {
-                    console.log($(this).children('#itemText').text());
-                    setTracks('video', $(this).children('#itemText').text());
-                    caphPlayer.tracksList.slideUp();
+                    //console.log($(this).children('#itemText').text());
+                    setTracks(type, $(this).children('#itemText').text());
+                    $('#'+type).slideUp();
                     $.caph.focus.controllerProvider.getInstance().setDepth(0);
                 });
                 $('<div/>', {
@@ -340,8 +344,8 @@
                     style:'position: absolute;left: 2px;'
                 }).appendTo(item);
                 $('<div/>', {
-                    class:'fa fa-check',
-                    style:'position: absolute;right: 2px;line-height:50px; color:green;'
+                    id:type+'-'+text+'-'+'check',
+                    class:'fa fa-check check',
                 }).appendTo(item);
                 return item.appendTo(caphPlayer.tracksList);
             };
@@ -417,7 +421,7 @@
             class : 'button fa fa-forward',
             focusable: ''
         }).on('selected', function() {
-            console.log('fa-forward selected');
+            //console.log('fa-forward selected');
             seekPlayTime('forward',currentTime, playProcess);
         }).appendTo(buttonsArea);
         /*var nextButton = $('<div/>', {
@@ -448,12 +452,10 @@
         }).appendTo(settingbuttonsArea);*/
 
         var subtitleButton = $('<div/>', {
-            //id:'btnContextMenu1',
             'data-focusable-depth':"0",
             class : 'button fa fa-cc',
             style: 'margin:0px 10px;float: right;',
             focusable: ''
-            //'data-focusable-depth' : '0'
         }).on('selected', function(){
             if($.isEmptyObject(caphPlayer.textTracks)) return;
 
@@ -463,11 +465,11 @@
         }).appendTo(settingbuttonsArea);
 
         function disableButton(btn) {
-            $(btn).css({color: 'rgba(255, 255, 255, 0.3)'});
+            $(btn).addClass('disable');
             !$.isEmptyObject(caphPlayer.textTracks) ? window.player.setTextTrackVisibility(true): null;
         }
         function releaseButton(btn) {
-            $(btn).css({color: 'rgba(255, 255, 255, 1)'});
+            $(btn).removeClass('disable');
             window.player.setTextTrackVisibility(false);
         }
 
@@ -490,6 +492,38 @@
             text: '▼'
         }).appendTo(menu);*/
     
+        /*
+        *   error dialog
+        */
+        caphPlayer.errorDialog = $('<div/>', {
+            class: 'caph-dialog'
+        }).appendTo(root_);
+        $('<div/>', {
+            class: 'caph-dialog-title',
+            text: 'CAPH Player Error:'
+        }).appendTo(caphPlayer.errorDialog);
+        $('<div/>', {
+            id:'error-dialog-content',
+            class: 'caph-dialog-content'
+        }).appendTo(caphPlayer.errorDialog);
+        $('<div/>', {
+            class: 'caph-dialog-buttons',
+            'button-type': 'alert'
+        }).appendTo(caphPlayer.errorDialog);
+
+        caphPlayer.errorDialog.caphDialog({
+            center: true,
+            onOpen: function() {
+                $.caph.focus.controllerProvider.getInstance().setDepth(4);
+            },
+            onClose: function() {
+                $.caph.focus.controllerProvider.getInstance().setDepth(0);
+            },
+            onSelectButton: function() {
+                caphPlayer.errorDialog.caphDialog('close');
+            }
+        });
+
         //show video resolution in real time
         var infoElement = $('<div/>', {
             class: 'infobars'
@@ -507,18 +541,16 @@
         caphPlayer.videoTracks = [];
         caphPlayer.textTracks = [];
         caphPlayer.audioTracks = [];
-        initApp(options.datas[0].uri);
+        initApp(options.datas[1].uri);
     };
 
     $.fn.caphDashjsPlayer = function(options) {
 
         //define default options
         var defaults = {};
+        //console.log(options);
 
-        var options = $.extend(defaults, options);
-        console.log(options);
-
-        return new player(this, options);
+        return new player(this, $.extend(defaults, options));
     };
     
     $(document).ready(function() {

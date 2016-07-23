@@ -164,6 +164,9 @@ a {
     background-size: auto 30px;
     background-color: rgba(150, 153, 159, .7);
 }
+.controls-bar .button.disable {
+    color: rgba(255, 255, 255, 0.3);
+}
 
 .player-loader {
     position: absolute;
@@ -174,7 +177,7 @@ a {
 }
 
 video::-webkit-media-text-track-display {
-  font-size: 200%;
+  font-size: 150%;
 }
 
 .menu-bar{
@@ -203,9 +206,6 @@ video::-webkit-media-text-track-display {
     width: 110px;
     color: #fff;
     font-size: 21px;
-    
-    /*height: 300px;
-    border: 1px solid black;*/
 }
 .track-list .list-item {
     background-color: rgba(150, 153, 159, .2);
@@ -215,8 +215,108 @@ video::-webkit-media-text-track-display {
 .track-list .list-item.focused {
     background-color: rgba(150, 153, 159, .7);
 }
+.track-list .list-item .check {
+    position: absolute;
+    right: 2px;
+    line-height:50px; 
+    color:green; 
+    opacity:0;
+}
+.track-list .list-item .active {
+    opacity:1;
+}
 
-
+.caph-dialog {
+  position: absolute;
+  opacity: 0.9;
+  z-index: 9999;
+  background-color: #0f1826;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+}
+.caph-dialog .title {
+  text-align: center;
+  color: #ffffff;
+  font-size: 46pt;
+  font-family: 'Samsung SVD_Medium';
+  max-height: 96px;
+}
+.caph-dialog .title-wrapper {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.298039);
+  height: 96px;
+  width: 100%;
+}
+.caph-dialog .content {
+  text-align: center;
+  font-size: 21pt;
+  color: #ffffff;
+  width: 100%;
+  overflow: hidden;
+  padding: 40px 0 40px 0;
+}
+.caph-dialog .title-area {
+  padding: 0 40px 0 40px;
+}
+.caph-dialog .content-area {
+  padding: 0 40px 0 40px;
+}
+.caph-dialog-button-area {
+  text-align: center;
+  padding-top: 30px;
+  height: 100px;
+  width: 100%;
+}
+.caph-dialog-button-area .button-wrapper {
+  display: -webkit-inline-box;
+}
+.caph-dialog-button {
+  display: table;
+  text-align: center;
+  color: #ffffff;
+  font-size: 21px;
+  cursor: default;
+  opacity: .8;
+  border: 1px solid #414141;
+  margin: -1px 5px -1px -1px;
+  width: 180px;
+  height: 43px;
+  vertical-align: middle;
+  float: left;
+}
+.caph-dialog-button:last-child {
+  margin: -1px;
+}
+.caph-dialog-button.focused {
+  border: 2px solid #076505;
+}
+.caph-dialog-button .button-text {
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.caph-dialog-button .button-text:hover {
+  background-color: rgba(255, 255, 255, 0.95);
+  opacity: 1.0;
+  color: #464646;
+}
+.caph-dim-init {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9998;
+  opacity: 0.6;
+  background-color: #000000;
+  visibility: hidden;
+}
+.caph-dim-translucent {
+  visibility: visible;
+}
 
 
 

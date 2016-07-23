@@ -107,7 +107,7 @@ a {
     position: relative;
     width: 200px;
     height: 80px;
-    font-size: 1.3em;
+    font-size: 21px;
     font-weight: bold;
     color: #FFFFFF;
     line-height: 80px;
@@ -171,22 +171,52 @@ a {
     margin: 490px auto;
     width: 80px;
     height: 80px;
-    /*border-radius: 100%;
-    border: 10px solid rgba(255,255,255,.2);
-    border-left-color: #FFF;
-    -webkit-animation: load 1.5s infinite linear;*/
 }
 
 video::-webkit-media-text-track-display {
   font-size: 200%;
 }
 
-/*
-@-webkit-keyframes load {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}*/
+.menu-bar{
+    position: absolute;
+    left: 1450px;
+    bottom: 410px;
+    width: 210px;
+    color: #fff;
+    font-size: 21px;
+    
+}
+.menu-bar .menu-item {
+    height: 50px;
+    line-height: 50px;
+    background-color: rgba(150, 153, 159, .2);
+}
+
+.menu-bar .menu-item.focused {
+    background-color: rgba(150, 153, 159, .7);
+}
+
+.track-list {
+    position: absolute;
+    bottom: 410px;
+    left: 1550px;
+    width: 110px;
+    color: #fff;
+    font-size: 21px;
+    
+    /*height: 300px;
+    border: 1px solid black;*/
+}
+.track-list .list-item {
+    background-color: rgba(150, 153, 159, .2);
+    height: 50px;
+    line-height: 50px;
+}
+.track-list .list-item.focused {
+    background-color: rgba(150, 153, 159, .7);
+}
+
+
+
+
+

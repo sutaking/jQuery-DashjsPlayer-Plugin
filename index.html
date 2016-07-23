@@ -16,7 +16,7 @@
     <!-- CAPH Dependecies -->
     <script src="./lib/jquery.min.js"></script>
     <script src="./lib/lodash.min.js"></script>
-    <script src="./lib/caph-jquery.js"></script>
+    <script src="./lib/caph-jquery.min.js"></script>
 
     <!-- CAPH Dash.js MediaPlayer source: -->
     <script src="./src/caphDashjsPlayer.js"></script>
@@ -25,14 +25,33 @@
 </head>
 <body>
     <div id="player"></div>
-
     <script type="text/javascript">
-        var startTrek = 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
-        var manifestUri = 'https://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd';
-        var fourKUri = 'https://storage.googleapis.com/shaka-demo-assets/sintel/dash.mpd';
+        var medias = [];
         
+        medias.push({
+            name: '[mse]Angel One (multicodec, multilingual)',
+            post:'',
+            uri: 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd',
+            drm:[],
+            features:[]
+        });
+        medias.push({
+            name: '[mse]Sintel 4k (multicodec)',
+            post:'',
+            uri: 'https://storage.googleapis.com/shaka-demo-assets/sintel/dash.mpd',
+            drm:[],
+            features:[]
+        });
+        medias.push({
+            name: '[mse]Car',
+            post:'',
+            uri: 'https://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd',
+            drm:[],
+            features:[]
+        });
+
         $('#player').caphDashjsPlayer({
-            uri : fourKUri
+            datas : medias
         });
 
     </script>

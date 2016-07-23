@@ -2,69 +2,68 @@
     'use strict';
 
     var PROCESS_BAR_MAX_WIDTH = 1400;
-
-    var video_, player_, timeId_, seekTimeValue_, textTracks_ ={}, videoTracks_={}, audioTracks_={};
+    
+    var caphPlayer = caphPlayer || {};
 
     /*
     *   create ShakaPlayer Object and bind media element
     */
     function initPlayer(manifestUri) {
-      // Create a Player instance.
-      video_ = document.getElementById('video');
+        // Create a Player instance.
+        caphPlayer.video = document.getElementById('video');
 
-      var player = new shaka.Player(video_);
+        var player = new shaka.Player(caphPlayer.video);
 
-      // Attach player to the window to make it easy to access in the JS console.
-      window.player = player;
-      player_ = player;
+        // Attach player to the window to make it easy to access in the JS console.
+        window.player = player;
 
-      // Listen for error events.
-      player.addEventListener('error', onErrorEvent);
+        // Listen for error events.
+        player.addEventListener('error', onErrorEvent);
 
-      // Try to load a manifest.
-      // This is an asynchronous process.
-      player.load(manifestUri).then(function() {
-        // This runs if the asynchronous load is successful.
-        console.log('The video has now been loaded!');
+        // Try to load a manifest.
+        // This is an asynchronous process.
+        player.load(manifestUri).then(function() {
+            // This runs if the asynchronous load is successful.
+            console.log('The video has now been loaded!');
 
-      }).catch(onError);  // onError is executed if the asynchronous load fails.
+        }).catch(onError);  // onError is executed if the asynchronous load fails.
     }
 
     /*
     *   init ShakaPlayer Object
     */
     function initApp(uri) {
-      // Install built-in polyfills to patch browser incompatibilities.
-      console.log('Application Start!');
-      shaka.polyfill.installAll();
+        // Install built-in polyfills to patch browser incompatibilities.
+        console.log('Application Start!');
+        shaka.polyfill.installAll();
 
-      // Check to see if the browser supports the basic APIs Shaka needs.
-      // This is an asynchronous check.
-      shaka.Player.support().then(function(support) {
-        // This executes when the asynchronous check is complete.
-        if (support.supported) {
-          // Everything looks good!
-          initPlayer(uri);
-          console.log('TV is supported!');
-        } else {
-          // This browser does not have the minimum set of APIs we need.
-          console.error('Browser not supported!');
-        }
-      });
+        // Check to see if the browser supports the basic APIs Shaka needs.
+        // This is an asynchronous check.
+        shaka.Player.support().then(function(support) {
+            // This executes when the asynchronous check is complete.
+            if (support.supported) {
+            // Everything looks good!
+            initPlayer(uri);
+            console.log('TV is supported!');
+            } else {
+            // This browser does not have the minimum set of APIs we need.
+            console.error('Browser not supported!');
+            }
+        });
     }
 
     /*
     *   Extract the shaka.util.Error object from the event.
     */
     function onErrorEvent(event) {
-      onError(event.detail);
+        onError(event.detail);
     }
 
     /*
     *   Log the error.
     */
     function onError(error) {
-      console.error('Error code', error.code, 'object', error);
+        console.error('Error code', error.code, 'object', error);
     }
 
     /*
@@ -72,8 +71,8 @@
     */
     function onSeekTime_(val) {
         //console.log('seektime: '+val);
-        timeId_ = null;
-        video_.currentTime = val;
+        caphPlayer.timeId_ = null;
+        caphPlayer.video.currentTime = val;
     }
 
     /*
@@ -82,15 +81,15 @@
     function seekPlayTime(type, currentTime, playProcess) {
 
         //1st update UI right way
-        var seekValue = video_.currentTime;
+        var seekValue = caphPlayer.video.currentTime;
         if(type === 'forward') { seekValue += 15;}
         else{ seekValue -= 15;}
         currentTime.text(formatTime(seekValue));
-        processTransform(playProcess, seekValue/video_.duration);
+        processTransform(playProcess, seekValue/caphPlayer.video.duration);
 
         // collect input evnets and seek.
-        if(timeId_ != null) {clearInterval(timeId_);}
-        timeId_ = setInterval(onSeekTime_(seekValue), 100);
+        if(caphPlayer.timeId_ != null) {clearInterval(caphPlayer.timeId_);}
+        caphPlayer.timeId_ = setInterval(onSeekTime_(seekValue), 100);
     }
 
     /*
@@ -142,13 +141,13 @@
         tarcks.forEach(function(item, index) {
             switch(item.type){
                 case 'text':
-                    textTracks_[item.language] = item;
+                    caphPlayer.textTracks[item.language] = item;
                     break;
                 case 'video':
-                    videoTracks_[item.width] = item;
+                    caphPlayer.videoTracks[item.width] = item;
                     break;
                 case 'audio':
-                    audioTracks_[item.language] = item;
+                    caphPlayer.audioTracks[item.language] = item;
                     break;
                 default:
                     console.log('unknow tracks type')
@@ -160,17 +159,22 @@
     /*
     *   get tracks from local save data.
     */
-    function findTracks(type, key) {
+    function setTracks(type, key) {
+        var t_;
         switch(type){
             case 'text':
-                return textTracks_[key];
+                t_ = caphPlayer.textTracks[key];
+                break;
             case 'video':
-                return videoTracks_[key];
+                t_ = caphPlayer.videoTracks[key];
+                break;
             case 'audio':
-                return audioTracks_[key];
+                t_ = caphPlayer.audioTracks[key];
+                break;
             default:
                 return;
         }
+        t_ ? window.player.selectTrack(t_, true): null;
     }
 
     /*
@@ -178,6 +182,13 @@
     */
     function createUI (rootNode) {
         var root_ = rootNode;
+
+        var loaderElement = $('<div/>', {
+            class: 'player-loader',
+        }).appendTo(root_);
+        $('<i/>', {
+            class: 'fa fa-spinner fa-pulse fa-5x fa-fw'
+        }).appendTo(loaderElement);
 
         /*
         *   video element
@@ -197,7 +208,7 @@
                 },
                 //Fires when the audio/video has been started or is no longer paused
                 play: function () {
-                    console.log('video event [play]');                
+                    console.log('video event [play]');
                     //playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
                 },
                 //Fires when the audio/video is playing after having been paused or stopped for buffering
@@ -224,12 +235,15 @@
                     console.log('video event [loadedmetadata]');
                     durationTime.text(formatTime($(self)[0].duration));
                     saveMediaTracks(window.player.getTracks());
+                    createMenu();
+
+                    if($.isEmptyObject(caphPlayer.textTracks)) disableButton(subtitleButton);
                 },
                 //Fires when the browser has loaded the current frame of the audio/video
                 loadeddata: function () {
                     console.log('video event [loadeddata]');
                     loaderElement.hide();
-                    video_.play();
+                    caphPlayer.video.play();
                     playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
                 },
                 //Fires when the current playback position has changed
@@ -237,7 +251,8 @@
                     currentTime.text(formatTime($(self)[0].currentTime));
                     infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
                     processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);
-                    processTransform(loadProcess, $(self)[0].buffered.end(0)/$(self)[0].duration);
+                    processTransform(loadProcess, ($(self)[0].buffered.end(0))/$(self)[0].duration);
+                    //console.log($(self)[0].buffered.end(0));
                 },
                 //Fires when an error occurred during the loading of an audio/video
                 error: function () {
@@ -251,14 +266,91 @@
             };
             events[event.type]();
         }).appendTo(root_);
-        
-        var loaderElement = $('<div/>', {
-            class: 'player-loader',
-        }).appendTo(root_);
-        $('<i/>', {
-            class: 'fa fa-spinner fa-pulse fa-5x fa-fw'
-        }).appendTo(loaderElement);
 
+
+        /*
+        * selected menu
+        */
+        function createMenu() {
+            caphPlayer.menuBar = $('<div/>',{
+                class: 'menu-bar'
+            }).appendTo(root_).hide();
+
+            function createMenuItem(text) {
+                var item = $('<div/>', {
+                    class:'menu-item',
+                    focusable: '',
+                    'data-focusable-depth':1
+                }).on('selected', function() {
+                    //console.log($(this).children('#itemText').text());
+                    caphPlayer.menuBar.slideUp();
+                    caphPlayer.tracksList.slideDown();
+                    $.caph.focus.controllerProvider.getInstance().setDepth(2);
+                });
+                $('<div/>', {
+                    id:'itemText',
+                    text: text,
+                    style:'position: absolute;left: 2px;'
+                }).appendTo(item);
+                $('<div/>', {
+                    class:'fa fa-chevron-right fa-1x',
+                    style:'position: absolute;right: 2px;line-height:50px;'
+                }).appendTo(item);
+                return item.appendTo(caphPlayer.menuBar);
+            }
+
+            $.isEmptyObject(caphPlayer.textTracks) ? null:createMenuItem('Subtitles');//&createList(caphPlayer.textTracks);
+            $.isEmptyObject(caphPlayer.videoTracks) ? null:createMenuItem('Quality')&createList(caphPlayer.videoTracks);
+            $.isEmptyObject(caphPlayer.audioTracks) ? null:createMenuItem('Audio');//&createList(caphPlayer.audioTracks);
+        };
+        
+
+        /*
+        *   tracks selected list caphPlayer.videoTracks
+        */
+        function createList(data) {
+            caphPlayer.tracksList = $('<div/>', {
+                class: 'track-list',
+            }).appendTo(root_).hide()
+
+            for(var i in data) {
+                createListItem(i);
+            }
+            /*$('#list1').caphList({
+                items: data,
+                template: '<div class="list-item" focusable>list</div>',
+                loop: true,
+                containerClass:'track-list'
+            });*/
+
+            function createListItem(text) {
+                var item = $('<div/>', {
+                    class:'list-item',
+                    focusable: '',
+                    'data-focusable-depth':2
+                }).on('selected', function() {
+                    console.log($(this).children('#itemText').text());
+                    setTracks('video', $(this).children('#itemText').text());
+                    caphPlayer.tracksList.slideUp();
+                    $.caph.focus.controllerProvider.getInstance().setDepth(0);
+                });
+                $('<div/>', {
+                    id:'itemText',
+                    text: text,
+                    style:'position: absolute;left: 2px;'
+                }).appendTo(item);
+                $('<div/>', {
+                    class:'fa fa-check',
+                    style:'position: absolute;right: 2px;line-height:50px; color:green;'
+                }).appendTo(item);
+                return item.appendTo(caphPlayer.tracksList);
+            };
+            
+        };
+        
+        /* 
+        *   create process bar
+        */
         var barElement = $('<div/>', {
             class: 'bars'
         }).appendTo(root_);
@@ -266,10 +358,7 @@
         var processBar = $('<div/>', {
             class : 'process-bar-area'
         }).appendTo(barElement);
-
-        /* 
-        *   create process bar
-        */
+        
         var processLine= $('<div/>', {
             class : 'process'
         }).appendTo(processBar);
@@ -312,8 +401,7 @@
             class : 'button fa fa-backward',
             focusable: ''
         }).on('selected', function() {
-            console.log('fa-backward selected');
-            
+            //console.log('fa-backward selected');
             seekPlayTime('backward',currentTime, playProcess);
         }).appendTo(buttonsArea);        
         var playButton = $('<div/>', {
@@ -321,8 +409,8 @@
             focusable: '',
             'data-focusable-initial-focus': true
         }).on('selected', function() {
-            if(!video_) return;
-            playButton.hasClass('fa-play') ? video_.play() : video_.pause();
+            if(!caphPlayer.video) return;
+            playButton.hasClass('fa-play') ? caphPlayer.video.play() : caphPlayer.video.pause();
             playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
         }).appendTo(buttonsArea);
         var forwardButton = $('<div/>', {
@@ -330,7 +418,6 @@
             focusable: ''
         }).on('selected', function() {
             console.log('fa-forward selected');
-
             seekPlayTime('forward',currentTime, playProcess);
         }).appendTo(buttonsArea);
         /*var nextButton = $('<div/>', {
@@ -345,36 +432,64 @@
             class : 'set-buttons-area'
         }).appendTo(contorlBar);        
         var settingButton = $('<div/>', {
-            class : 'button fa fa-ellipsis-h',
+            class : 'button fa fa-cog',//fa-cog  fa-ellipsis-h
             style: 'margin:0px 10px;float: right;',
             focusable: ''
         }).on('selected', function() {
-             //textTracks_, videoTracks_, audioTracks_
-             console.log(textTracks_);
-             console.log(videoTracks_);
-             console.log(audioTracks_);
+             caphPlayer.menuBar.slideDown();
+             $.caph.focus.controllerProvider.getInstance().setDepth(1);
         }).appendTo(settingbuttonsArea);
-        
+
+        /*
+        * subtitle button
+        */
+        /*var contextMenuArea = $('<div/>',{
+            id: 'contextMenuArea'
+        }).appendTo(settingbuttonsArea);*/
 
         var subtitleButton = $('<div/>', {
+            //id:'btnContextMenu1',
+            'data-focusable-depth':"0",
             class : 'button fa fa-cc',
             style: 'margin:0px 10px;float: right;',
             focusable: ''
+            //'data-focusable-depth' : '0'
         }).on('selected', function(){
-            if (window.player.isTextTrackVisible()) {
-                $(this).css({color: 'white'});
-                window.player.setTextTrackVisibility(false);
-            } else {
-                // Make the button look darker to show that the text track is inactive.
-                $(this).css({color: 'rgba(255, 255, 255, 0.3)'});
-                window.player.setTextTrackVisibility(!window.player.isTextTrackVisible());
-            }
-            
-            var track_ = findTracks('text', 'en');
-            track_ ? window.player.selectTrack(track_, true): null;
+            if($.isEmptyObject(caphPlayer.textTracks)) return;
+
+            setTracks('text', 'en');
+            window.player.isTextTrackVisible()?releaseButton(this):disableButton(this);
 
         }).appendTo(settingbuttonsArea);
 
+        function disableButton(btn) {
+            $(btn).css({color: 'rgba(255, 255, 255, 0.3)'});
+            !$.isEmptyObject(caphPlayer.textTracks) ? window.player.setTextTrackVisibility(true): null;
+        }
+        function releaseButton(btn) {
+            $(btn).css({color: 'rgba(255, 255, 255, 1)'});
+            window.player.setTextTrackVisibility(false);
+        }
+
+        /*
+        *   subtitle selected option.
+        */
+        /*var menu = $('<div/>', {
+            id:'contextMenu1'
+        }).appendTo(subtitleButton);
+        $('<div/>', {
+            class: 'caph-context-menu-arrow-up-template',
+            text: '▲'
+        }).appendTo(menu);
+        $('<div/>', {
+            class: 'caph-context-menu-item-template',
+            text: '${content}'
+        }).appendTo(menu);
+        $('<div/>', {
+            class: 'caph-context-menu-arrow-down-template',
+            text: '▼'
+        }).appendTo(menu);*/
+    
         //show video resolution in real time
         var infoElement = $('<div/>', {
             class: 'infobars'
@@ -386,63 +501,28 @@
     *   start player
     */
     function player(dom, options) {
-        var ctrl = new demoControl();
-        ctrl.init();
 
-        createUI($(dom));
-        initApp(options.uri);
+        createUI($(dom), options.datas);
+
+        caphPlayer.videoTracks = [];
+        caphPlayer.textTracks = [];
+        caphPlayer.audioTracks = [];
+        initApp(options.datas[0].uri);
     };
 
     $.fn.caphDashjsPlayer = function(options) {
 
         //define default options
-        var defaults = {
-
-        };
+        var defaults = {};
 
         var options = $.extend(defaults, options);
-        //console.log(options);
+        console.log(options);
 
         return new player(this, options);
     };
-
+    
     $(document).ready(function() {
-
-        $.caph.focus.activate(function(nearestFocusableFinderProvider, controllerProvider){
-
-            controllerProvider.onFocused(function(event, originalEvent){
-                var target = $(event.currentTarget);
-                //console.log(target);
-            });
-
-            controllerProvider.onSelected(function (event, originalEvent) {
-                
-                /*var target = $(event.currentTarget);
-                if(target.hasClass('fa-play')) {
-                    //console.log(event.currentTarget);
-                }
-                else if(target.hasClass('fa-step-backward')) {
-                    //console.log('fa-step-backward');
-                }
-                else if(target.hasClass('fa-backward')) {
-                    //console.log('fa-backward');
-                }
-                else if(target.hasClass('fa-forward')) {
-                    //seekBar();
-                    //console.log('fa-forward');
-                }
-                else if(target.hasClass('fa-step-forward')) {
-                    //console.log('fa-step-forward');
-                }
-                else if(target.hasClass('fa-cog')) {
-                    //console.log('setting');
-                }
-                else if(target.hasClass('fa-cc')) {
-                    //console.log('subtitle');
-                }*/
-            });    
-        });
+        $.caph.focus.activate();
     });
-
 
 })(jQuery);

@@ -541,7 +541,13 @@
         caphPlayer.videoTracks = [];
         caphPlayer.textTracks = [];
         caphPlayer.audioTracks = [];
-        initApp(options.datas[1].uri);
+
+		var reqAppData = tizen.application.getCurrentApplication().getRequestedAppControl();
+		var reqAppControl = reqAppData.appControl;
+	    console.log(' fzhao start reqAppControl ==> ' + JSON.stringify(reqAppControl));
+		console.log('fzhao data uri:' +reqAppControl.data[0].value[0]);
+
+        initApp(reqAppControl.data[0].value[0]);//options.datas[1].uri
     };
 
     $.fn.caphDashjsPlayer = function(options) {

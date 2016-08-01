@@ -541,7 +541,7 @@
         caphPlayer.videoTracks = [];
         caphPlayer.textTracks = [];
         caphPlayer.audioTracks = [];
-        initApp(options.datas[1].uri);
+        initApp(options.datas[0].uri);
     };
 
     $.fn.caphDashjsPlayer = function(options) {
@@ -553,8 +553,8 @@
         return new player(this, $.extend(defaults, options));
     };
     
-    $(document).ready(function() {
+    /*$(document).ready(function() {
         $.caph.focus.activate();
-    });
+    });*/
 
 })(jQuery);

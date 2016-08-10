@@ -31,6 +31,22 @@
         *   we can discuss more detail about data.
         */
         medias.push({
+            name: 'Big Buck Bunny (Live)',
+            uri: '//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mpm4sav_mvtime.mpd', 
+            drm:[],
+            features:[
+                'live'
+            ]
+        });
+        medias.push({
+            name: 'Sintel 4k (multicodec, Widevine)',
+            uri: 'https://storage.googleapis.com/shaka-demo-assets/sintel-widevine/dash.mpd',
+            licenseServers: {
+              'com.widevine.alpha': 'https://widevine-proxy.appspot.com/proxy'
+            },
+            drm:['com.widevine.alpha']
+        });
+        medias.push({
             name: '[mse]Angel One (multicodec, multilingual)',
             post:'',
             uri: 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd',
@@ -51,6 +67,10 @@
             drm:[],
             features:[]
         });
+        medias.push({
+            uri:'http://dash.pro35.lv3.cdn.hbo.com/av/videos/series/any-given-wednesday-with-bill-simmons/season-01/205-extra-time-danny-mcbride-87617524_PRO35/manifest.mpd'
+        });
+        
 
         $('#player').caphDashjsPlayer({
             datas : medias

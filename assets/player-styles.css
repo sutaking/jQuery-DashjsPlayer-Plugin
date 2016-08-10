@@ -219,9 +219,10 @@ video::-webkit-media-text-track-display {
     position: absolute;
     right: 2px;
     line-height:50px; 
-    color:green; 
-    opacity:0;
+    color:green;
+    opacity: 0;
 }
+
 .track-list .list-item .active {
     opacity:1;
 }

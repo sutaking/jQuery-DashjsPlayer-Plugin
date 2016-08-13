@@ -32,7 +32,7 @@
         */
         medias.push({
             name: 'Big Buck Bunny (Live)',
-            uri: '//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mpm4sav_mvtime.mpd', 
+            uri: 'https://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mpm4sav_mvtime.mpd', 
             drm:[],
             features:[
                 'live'
@@ -44,7 +44,8 @@
             licenseServers: {
               'com.widevine.alpha': 'https://widevine-proxy.appspot.com/proxy'
             },
-            drm:['com.widevine.alpha']
+            drm:['com.widevine.alpha'],
+            features:[]
         });
         medias.push({
             name: '[mse]Angel One (multicodec, multilingual)',

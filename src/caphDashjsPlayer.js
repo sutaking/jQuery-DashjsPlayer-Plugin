@@ -217,8 +217,22 @@
             default:
                 return;
         }
+        updateSelectedItem(type, key);
         t_ ? window.player.selectTrack(t_, true): null;
+        
     }
+
+    /*
+    *   update selected item UI
+    */
+    function updateSelectedItem(type, id) {
+        $('.check').each(function(index) {
+            if(!$(this).attr('id').indexOf(type)) {
+                $(this).css({opacity:0})
+            }
+        })
+        $('#'+type+'-'+id+'-'+'check').css({opacity:1});
+    };
 
     /*
     *   create player's UI template
@@ -298,7 +312,9 @@
                     currentTime.text(formatTime(caphPlayer.isLive?($(self)[0].currentTime-caphPlayer.startTime):$(self)[0].currentTime));
                     infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
                     processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);
-                    processTransform(loadProcess, ($(self)[0].buffered.end(0))/$(self)[0].duration);
+                    if($(self)[0].buffered.length>0) {
+                        processTransform(loadProcess, ($(self)[0].buffered.end(0))/$(self)[0].duration);
+                    }
                 },
                 //Fires when an error occurred during the loading of an audio/video
                 error: function () {
@@ -572,7 +588,7 @@
             console.log('fzhao data uri:' +reqAppControl.data[0].value[0]);
         }*/
 
-        initApp(options.datas[0]);
+        initApp(options.datas[2]);
     };
 
     $.fn.caphDashjsPlayer = function(options) {

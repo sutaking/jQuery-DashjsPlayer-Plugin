@@ -405,7 +405,7 @@
                 $('<div/>', {
                     id:type+'-'+text+'-'+'check',
                     class:'fa fa-check check'
-                }).appendTo(item);//.hide();
+                }).appendTo(item);
                 return item.appendTo(caphPlayer.tracksList);
             };
         };
@@ -455,10 +455,10 @@
         /*
         *   video player control buttons
         */
-        /*var preButton = $('<div/>', {
+        var preButton = $('<div/>', {
             class : 'button fa fa-step-backward',
             focusable: ''
-        }).appendTo(buttonsArea);*/
+        }).appendTo(buttonsArea);
         var backwardButton = $('<div/>', {
             class : 'button fa fa-backward',
             focusable: ''
@@ -482,10 +482,10 @@
             //console.log('fa-forward selected');
             seekPlayTime('forward',currentTime, playProcess);
         }).appendTo(buttonsArea);
-        /*var nextButton = $('<div/>', {
+        var nextButton = $('<div/>', {
             class : 'button fa fa-step-forward',
             focusable: ''
-        }).appendTo(buttonsArea);*/
+        }).appendTo(buttonsArea);
 
         /*
         * right toolbar buttons
@@ -530,7 +530,59 @@
             $(btn).removeClass('disable');
             window.player.setTextTrackVisibility(false);
         }
-    
+
+        /*
+        *   show caph-list of playlist 
+        */
+        var listTitle = $('<div>', {
+            class: 'list-title'
+        }).appendTo(root_);
+        $('<div>', {
+            class:'title-index fa fa-list-ul',
+            text : ' null'
+        }).appendTo(listTitle);
+        $('<div>', {
+            class:'title-name'
+        }).appendTo(listTitle);
+
+        var listArea = $('<div>', {
+            class: 'list-area'
+        }).appendTo(root_);
+        $('<div>', {
+            id:'list1',
+            style:''
+        }).appendTo(listArea);
+
+        var itemTemplate = '<div class="item" style="background:url(<%= item.post %>) center center no-repeat; background-size:cover;" focusable>'
+        +'<div hide id="playlist-item-<%=index%>" class="statu-icon fa fa-play-circle-o" aria-hidden="true"></div>'
+        +'</div>'
+        $('#list1').caphList({
+            items: caphPlayer.playlist,
+            template: itemTemplate,
+            containerClass: 'list',
+            //loop:true,
+            onFocusItemView: function(context) {
+                $('.title-index').text(' '+(context.itemIndex+1)+'/'+context.itemCount);
+                $('.title-name').text(caphPlayer.playlist[context.itemIndex].name);
+            }
+        });
+        $('#playlist-item-0').show();
+        $.caph.focus.controllerProvider.onSelected(function(event) {
+            if(event.target.className.indexOf('item')) {
+                return;
+            }
+            //console.log(event.target.className);
+            //$('#list1').animate({bottom: '-70px'});
+        });
+        /*$.caph.focus.controllerProvider.onFocused(function(event) {
+            if(event.target.className.indexOf('item')) {
+                $('#list1').animate({bottom: '-70px'});
+                return;
+            }
+            console.log('onFocused');
+            $('#list1').animate({bottom: '90px'});
+        });*/
+
         /*
         *   error dialog
         */
@@ -563,6 +615,7 @@
             }
         });
 
+
         //show video resolution in real time
         var infoElement = $('<div/>', {
             class: 'infobars'
@@ -573,13 +626,21 @@
     /*
     *   start player
     */
-    function player(dom, options) {
-
-        createUI($(dom), options.datas);
-
+    function player(data) {
         caphPlayer.videoTracks = [];
         caphPlayer.textTracks = [];
         caphPlayer.audioTracks = [];
+
+        initApp(data);
+    };
+
+    $.fn.caphDashjsPlayer = function(options) {
+
+        //define default options
+        var defaults = {};//$.extend(defaults, options)
+
+        caphPlayer.playlist = options.datas;
+        createUI(this, options.datas);
 
         /*if(tizen) {
             var reqAppData = tizen.application.getCurrentApplication().getRequestedAppControl();
@@ -588,16 +649,7 @@
             console.log('fzhao data uri:' +reqAppControl.data[0].value[0]);
         }*/
 
-        initApp(options.datas[2]);
-    };
-
-    $.fn.caphDashjsPlayer = function(options) {
-
-        //define default options
-        var defaults = {};
-        //console.log(options);
-
-        return new player(this, $.extend(defaults, options));
+        return new player(options.datas[0]);
     };
     
     /*$(document).ready(function() {

@@ -23,7 +23,7 @@
         var player = new shaka.Player(caphPlayer.video);
 
         // Attach player to the window to make it easy to access in the JS console.
-        window.player = player;
+        caphPlayer.player = player;
 
         // Listen for error events.
         player.addEventListener('error', onErrorEvent);
@@ -218,7 +218,7 @@
                 return;
         }
         updateSelectedItem(type, key);
-        t_ ? window.player.selectTrack(t_, true): null;
+        t_ ? caphPlayer.player.selectTrack(t_, true): null;
         
     }
 
@@ -294,7 +294,7 @@
                 loadedmetadata: function () {
                     console.log('video event [loadedmetadata]');
                     durationTime.text(caphPlayer.isLive ? 'Live':formatTime($(self)[0].duration));
-                    saveMediaTracks(window.player.getTracks());
+                    saveMediaTracks(caphPlayer.player.getTracks());
 
                     createMenu();
 
@@ -379,12 +379,6 @@
             for(var i in data) {
                 createListItem(i, type);
             }
-            /*$('#list1').caphList({
-                items: data,
-                template: '<div class="list-item" focusable>list</div>',
-                loop: true,
-                containerClass:'track-list'
-            });*/
 
             function createListItem(text, type) {
                 var item = $('<div/>', {
@@ -463,7 +457,6 @@
             class : 'button fa fa-backward',
             focusable: ''
         }).on('selected', function() {
-            //console.log('fa-backward selected');
             seekPlayTime('backward',currentTime, playProcess);
         }).appendTo(buttonsArea);        
         var playButton = $('<div/>', {
@@ -479,7 +472,6 @@
             class : 'button fa fa-forward',
             focusable: ''
         }).on('selected', function() {
-            //console.log('fa-forward selected');
             seekPlayTime('forward',currentTime, playProcess);
         }).appendTo(buttonsArea);
         var nextButton = $('<div/>', {
@@ -518,17 +510,17 @@
             if($.isEmptyObject(caphPlayer.textTracks)) return;
 
             setTracks('text', 'en');
-            window.player.isTextTrackVisible()?releaseButton(this):disableButton(this);
+            caphPlayer.player.isTextTrackVisible()?releaseButton(this):disableButton(this);
 
         }).appendTo(settingbuttonsArea);
 
         function disableButton(btn) {
             $(btn).addClass('disable');
-            !$.isEmptyObject(caphPlayer.textTracks) ? window.player.setTextTrackVisibility(true): null;
+            !$.isEmptyObject(caphPlayer.textTracks) ? caphPlayer.player.setTextTrackVisibility(true): null;
         }
         function releaseButton(btn) {
             $(btn).removeClass('disable');
-            window.player.setTextTrackVisibility(false);
+            caphPlayer.player.setTextTrackVisibility(false);
         }
 
         /*
@@ -614,7 +606,6 @@
                 caphPlayer.errorDialog.caphDialog('close');
             }
         });
-
 
         //show video resolution in real time
         var infoElement = $('<div/>', {

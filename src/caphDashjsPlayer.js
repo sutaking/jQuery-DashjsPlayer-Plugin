@@ -1,6 +1,18 @@
 (function ($) {
     'use strict';
 
+    var KEY_CODE = {
+        RETURN: 10009,
+        ESC: 27,
+        MEDIA_REWIND: 412,
+        MEDIA_FORWARD: 417,
+        MEDIA_PALY: 415,
+        MEDIA_PAUSE: 19,
+        MEDIA_STOP: 413,
+        MEDIA_TRACK_PREVIOUS: 10232,
+        MEDIA_TRACK_NEXT: 10233
+    }
+
     var PROCESS_BAR_MAX_WIDTH = 1400;
     var SEEK_INTERVAL = 15;
     
@@ -9,13 +21,15 @@
     /*
     *   create ShakaPlayer Object and bind media element
     */
-    function initPlayer(asset) {
+    function createShakePlayer(asset) {
 
         caphPlayer.isLive = false;
-        asset.features.forEach(function(feature){
-            if(feature === 'live') 
-                caphPlayer.isLive = true;
-        });
+        if('features' in asset) {
+            asset.features.forEach(function(feature){
+                if(feature === 'live') 
+                    caphPlayer.isLive = true;
+            });
+        }
 
         // Create a Player instance.
         caphPlayer.video = document.getElementById('video');
@@ -68,7 +82,7 @@
     /*
     *   init ShakaPlayer Object
     */
-    function initApp(uri) {
+    function initApp(asset) {
         // Install built-in polyfills to patch browser incompatibilities.
         console.log('Application Start!');
         shaka.polyfill.installAll();
@@ -79,7 +93,7 @@
             // This executes when the asynchronous check is complete.
             if (support.supported) {
             // Everything looks good!
-            initPlayer(uri);
+            createShakePlayer(asset);
             console.log('TV is supported!');
             } else {
             // This browser does not have the minimum set of APIs we need.
@@ -180,7 +194,6 @@
     *   save media source tracks
     */
     function saveMediaTracks(tarcks) {
-
         tarcks.forEach(function(item, index) {
             switch(item.type){
                 case 'text':
@@ -237,12 +250,13 @@
     /*
     *   create player's UI template
     */
-    function createUI (rootNode) {
+    var createUI = function(rootNode) {
         var root_ = rootNode;
 
         var loaderElement = $('<div/>', {
             class: 'player-loader',
         }).appendTo(root_);
+        var loadIcon = loaderElement;
         $('<i/>', {
             class: 'fa fa-spinner fa-pulse fa-5x fa-fw'
         }).appendTo(loaderElement);
@@ -255,7 +269,7 @@
             width : '1920px',
             height : '1080px',
         }).on('play playing pause waiting process loadedmetadata loadeddata timeupdate error ended', function (event) {
-            //console.log(this);
+
             var self = this;
             var events = {
                 //Fires when the loading of an audio/video is aborted
@@ -329,7 +343,6 @@
             events[event.type]();
         }).appendTo(root_);
 
-
         /*
         * selected menu
         */
@@ -344,7 +357,6 @@
                     focusable: '',
                     'data-focusable-depth':1
                 }).on('selected', function() {
-                    //console.log($(this).children('#itemText').text());
                     caphPlayer.menuBar.slideUp();
                     $('#'+text).slideDown();
                     $.caph.focus.controllerProvider.getInstance().setDepth(2);
@@ -386,7 +398,6 @@
                     focusable: '',
                     'data-focusable-depth':2
                 }).on('selected', function() {
-                    //console.log($(this).children('#itemText').text());
                     setTracks(type, $(this).children('#itemText').text());
                     $('#'+type).slideUp();
                     $.caph.focus.controllerProvider.getInstance().setDepth(0);
@@ -402,6 +413,12 @@
                 }).appendTo(item);
                 return item.appendTo(caphPlayer.tracksList);
             };
+        };
+
+        caphPlayer.hideSelectedList = function() {
+            $('.menu-bar').hide();
+            $('.track-list').hide();
+            $.caph.focus.controllerProvider.getInstance().setDepth(0);
         };
 
         /* 
@@ -477,6 +494,8 @@
         var nextButton = $('<div/>', {
             class : 'button fa fa-step-forward',
             focusable: ''
+        }).on('selected', function() {
+            playByIndex(caphPlayer.currentIndex+1);
         }).appendTo(buttonsArea);
 
         /*
@@ -497,10 +516,6 @@
         /*
         * subtitle button
         */
-        /*var contextMenuArea = $('<div/>',{
-            id: 'contextMenuArea'
-        }).appendTo(settingbuttonsArea);*/
-
         var subtitleButton = $('<div/>', {
             'data-focusable-depth':"0",
             class : 'button fa fa-cc',
@@ -545,26 +560,30 @@
             style:''
         }).appendTo(listArea);
 
-        var itemTemplate = '<div class="item" style="background:url(<%= item.post %>) center center no-repeat; background-size:cover;" focusable>'
+        var itemTemplate = '<div id="<%=index%>" class="item" style="background:url(<%= item.post %>) center center no-repeat; background-size:cover;" focusable>'
         +'<div hide id="playlist-item-<%=index%>" class="statu-icon fa fa-play-circle-o" aria-hidden="true"></div>'
         +'</div>'
         $('#list1').caphList({
             items: caphPlayer.playlist,
             template: itemTemplate,
             containerClass: 'list',
-            //loop:true,
+            loop:true,
             onFocusItemView: function(context) {
                 $('.title-index').text(' '+(context.itemIndex+1)+'/'+context.itemCount);
                 $('.title-name').text(caphPlayer.playlist[context.itemIndex].name);
             }
         });
-        $('#playlist-item-0').show();
+
+        caphPlayer.updatePlaylistStatus = function() {
+            $('.statu-icon').hide();
+            $('#playlist-item-'+caphPlayer.currentIndex).show();
+        };
+
         $.caph.focus.controllerProvider.onSelected(function(event) {
             if(event.target.className.indexOf('item')) {
                 return;
             }
-            //console.log(event.target.className);
-            //$('#list1').animate({bottom: '-70px'});
+            playByIndex(parseInt(event.target.id));
         });
         /*$.caph.focus.controllerProvider.onFocused(function(event) {
             if(event.target.className.indexOf('item')) {
@@ -607,17 +626,70 @@
             }
         });
 
+        caphPlayer.showMenu = function() {
+            clearInterval(caphPlayer.menuHideID);
+            listArea.show();
+            listTitle.show();
+            barElement.show();
+            caphPlayer.menuHideID = setInterval(function() {
+                caphPlayer.hideMenu();
+            }, 5000);
+        };
+
+        caphPlayer.hideMenu = function() {
+            $('.menu-bar').hide();
+            $('.track-list').hide();
+            $.caph.focus.controllerProvider.getInstance().setDepth(0);
+            listArea.hide();
+            listTitle.hide();
+            barElement.hide();
+        }
+        caphPlayer.hideMenu();
+
         //show video resolution in real time
         var infoElement = $('<div/>', {
             class: 'infobars'
         }).appendTo(root_);
+
+        caphPlayer.initPlayerMenu = function() {
+            caphPlayer.updatePlaylistStatus();
+            loadIcon.show();
+            releaseButton(subtitleButton);
+            currentTime.text('00:00');
+            infoElement.text('');
+            processTransform(playProcess, 0);
+            processTransform(loadProcess, 0);            
+        }
         
     };
 
+    $(document).on('keydown mouseover', function(event) {
+        caphPlayer.showMenu();
+
+        switch(event.keyCode) {
+            case KEY_CODE.ESC:
+            case KEY_CODE.RETURN:
+                caphPlayer.hideSelectedList();
+                break;
+            default:
+                break;
+        }
+    });
+
+    function playByIndex(index) {
+        if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) return;
+
+        caphPlayer.player.destroy();
+        createShakePlayer(caphPlayer.playlist[index]);
+
+        caphPlayer.currentIndex = index;
+        caphPlayer.initPlayerMenu();        
+    };
+
     /*
-    *   start player
+    *   create player
     */
-    function player(data) {
+    function createPlayer(data) {
         caphPlayer.videoTracks = [];
         caphPlayer.textTracks = [];
         caphPlayer.audioTracks = [];
@@ -628,10 +700,16 @@
     $.fn.caphDashjsPlayer = function(options) {
 
         //define default options
-        var defaults = {};//$.extend(defaults, options)
+        var defaults = {
+            defaultIndex: 0
+        };
+        var opt = $.extend(defaults, options);
 
-        caphPlayer.playlist = options.datas;
-        createUI(this, options.datas);
+        caphPlayer.playlist = opt.datas;
+        caphPlayer.currentIndex = opt.defaultIndex;
+        caphPlayer.playlistLength = opt.datas.length;
+        createUI(this, opt.datas);
+        caphPlayer.updatePlaylistStatus();
 
         /*if(tizen) {
             var reqAppData = tizen.application.getCurrentApplication().getRequestedAppControl();
@@ -640,9 +718,9 @@
             console.log('fzhao data uri:' +reqAppControl.data[0].value[0]);
         }*/
 
-        return new player(options.datas[0]);
+        return createPlayer(opt.datas[opt.defaultIndex]);
     };
-    
+
     /*$(document).ready(function() {
         $.caph.focus.activate();
     });*/

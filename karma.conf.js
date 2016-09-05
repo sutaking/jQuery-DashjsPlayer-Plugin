@@ -21,7 +21,7 @@ module.exports = function(config) {
     ],
 
     htmlReporter: {
-        outputFile: 'karma_html/units.html',
+        outputFile: 'build/units.html',
         pageTitle: 'CAPH DashPlayer Units Tests',
         subPageTitle: 'jQuery-DashjsPlayer-Plugin Unit Tests'
     },

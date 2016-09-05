@@ -1,10 +1,28 @@
 (function ($) {
     'use strict';
 
+    var shaka_ = window.shaka;
     var PROCESS_BAR_MAX_WIDTH = 1400;
     var SEEK_INTERVAL = 15;
     
     var caphPlayer = caphPlayer || {};
+
+    /*
+    *   Log the error.
+    */
+    function onError(error) {
+        console.error('Error code', error.code, 'object', error);
+        //alert('Error code: '+ error.code);
+        $('#error-dialog-content').text('Error code: '+ error.code);
+        caphPlayer.errorDialog.caphDialog('open');
+    }
+
+    /*
+    *   Extract the shaka.util.Error object from the event.
+    */
+    function onErrorEvent(event) {
+        onError(event.detail);
+    }
 
     /*
     *   create ShakaPlayer Object and bind media element
@@ -14,15 +32,16 @@
         caphPlayer.isLive = false;
         if('features' in asset) {
             asset.features.forEach(function(feature){
-                if(feature === 'live') 
+                if(feature === 'live') {
                     caphPlayer.isLive = true;
+                }
             });
         }
 
         // Create a Player instance.
         caphPlayer.video = document.getElementById('video');
 
-        var player = new shaka.Player(caphPlayer.video);
+        var player = new shaka_.Player(caphPlayer.video);
 
         // Attach player to the window to make it easy to access in the JS console.
         caphPlayer.player = player;
@@ -34,12 +53,15 @@
         var config = ({ abr: {}, drm: {}, manifest: { dash: {} } });
         config.manifest.dash.clockSyncUri = 'https://shaka-player-demo.appspot.com/time.txt';
 
-        if (asset.licenseServers)
+        if (asset.licenseServers) {
           config.drm.servers = asset.licenseServers;
-        if (asset.drmCallback)
+        }
+        if (asset.drmCallback) {
           config.manifest.dash.customScheme = asset.drmCallback;
-        if (asset.clearKeys)
+        }
+        if (asset.clearKeys) {
           config.drm.clearKeys = asset.clearKeys;
+        }
 
         player.resetConfiguration();
         player.configure(config);
@@ -50,7 +72,7 @@
         networkingEngine.clearAllResponseFilters();
 
         if (asset.licenseRequestHeaders) {
-          var filter = shakaDemo.addLicenseRequestHeaders_.bind(
+          var filter = shaka_.addLicenseRequestHeaders_.bind(
               null, asset.licenseRequestHeaders);
           networkingEngine.registerRequestFilter(filter);
         }
@@ -73,11 +95,11 @@
     function initApp(asset) {
         // Install built-in polyfills to patch browser incompatibilities.
         console.log('Application Start!');
-        shaka.polyfill.installAll();
+        shaka_.polyfill.installAll();
 
         // Check to see if the browser supports the basic APIs Shaka needs.
         // This is an asynchronous check.
-        shaka.Player.support().then(function(support) {
+        shaka_.Player.support().then(function(support) {
             // This executes when the asynchronous check is complete.
             if (support.supported) {
             // Everything looks good!
@@ -91,50 +113,12 @@
     }
 
     /*
-    *   Extract the shaka.util.Error object from the event.
-    */
-    function onErrorEvent(event) {
-        onError(event.detail);
-    }
-
-    /*
-    *   Log the error.
-    */
-    function onError(error) {
-        console.error('Error code', error.code, 'object', error);
-        //alert('Error code: '+ error.code);
-        $('#error-dialog-content').text('Error code: '+ error.code);
-        caphPlayer.errorDialog.caphDialog('open');
-    }
-
-    /*
     *   seek media source current time.
     */
     function onSeekTime_(val) {
         //console.log('seektime: '+val);
         caphPlayer.timeId_ = null;
         caphPlayer.video.currentTime = val;
-    }
-
-    /*
-    *   prepare seek media source by timeout
-    */
-    function seekPlayTime(type, currentTime, playProcess) {
-
-        //1st update UI right way
-        var seekValue = caphPlayer.video.currentTime;
-        if(type === 'forward') { seekValue += SEEK_INTERVAL;}
-        else{ seekValue -= SEEK_INTERVAL;}
-
-        if(seekValue>caphPlayer.video.duration){seekValue=caphPlayer.video.duration;}
-        else if(seekValue<0){seekValue=0;}
-
-        currentTime.text(formatTime(seekValue));
-        processTransform(playProcess, seekValue/caphPlayer.video.duration);
-
-        // collect input evnets and seek.
-        if(caphPlayer.timeId_ != null) {clearInterval(caphPlayer.timeId_);}
-        caphPlayer.timeId_ = setInterval(onSeekTime_(seekValue), 100);
     }
 
     /*
@@ -155,7 +139,7 @@
             seconds = '0' + seconds;
         }
         return [hours, minutes, seconds];
-    };
+    }
 
     /*
     *   format time object to string
@@ -167,7 +151,7 @@
             return array[0] + ':' + array[1] + ':' + array[2];
         }
         return sec ? array[1] + ':' + array[2] : '00:00';
-    };
+    }
 
     /*
     *   translate progress bar
@@ -176,13 +160,34 @@
         $(line).css({
             transform: 'translate3d(' + (value * PROCESS_BAR_MAX_WIDTH - PROCESS_BAR_MAX_WIDTH) + 'px, 0, 0)'
         });
-    };
+    }
+
+    /*
+    *   prepare seek media source by timeout
+    */
+    function seekPlayTime(type, currentTime, playProcess) {
+
+        //1st update UI right way
+        var seekValue = caphPlayer.video.currentTime;
+        if(type === 'forward') { seekValue += SEEK_INTERVAL;}
+        else{ seekValue -= SEEK_INTERVAL;}
+
+        if(seekValue>caphPlayer.video.duration){seekValue=caphPlayer.video.duration;}
+        else if(seekValue<0){seekValue=0;}
+
+        currentTime.text(formatTime(seekValue));
+        processTransform(playProcess, seekValue/caphPlayer.video.duration);
+
+        // collect input evnets and seek.
+        if(caphPlayer.timeId_ !== null) {clearInterval(caphPlayer.timeId_);}
+        caphPlayer.timeId_ = setInterval(onSeekTime_(seekValue), 100);
+    }
 
     /*
     *   save media source tracks
     */
     function saveMediaTracks(tarcks) {
-        tarcks.forEach(function(item, index) {
+        tarcks.forEach(function(item) {
             switch(item.type){
                 case 'text':
                     caphPlayer.textTracks[item.language] = item;
@@ -194,11 +199,23 @@
                     caphPlayer.audioTracks[item.language] = item;
                     break;
                 default:
-                    console.log('unknow tracks type')
+                    console.log('unknow tracks type');
                     break;
             }
         });
-    };
+    }
+
+    /*
+    *   update selected item UI
+    */
+    function updateSelectedItem(type, id) {
+        $('.check').each(function() {
+            if(!$(this).attr('id').indexOf(type)) {
+                $(this).css({opacity:0});
+            }
+        });
+        $('#'+type+'-'+id+'-'+'check').css({opacity:1});
+    }
 
     /*
     *   get tracks from local save data.
@@ -223,23 +240,22 @@
 
     }
 
-    /*
-    *   update selected item UI
-    */
-    function updateSelectedItem(type, id) {
-        $('.check').each(function(index) {
-            if(!$(this).attr('id').indexOf(type)) {
-                $(this).css({opacity:0})
-            }
-        })
-        $('#'+type+'-'+id+'-'+'check').css({opacity:1});
-    };
+    function playByIndex(index) {
+        if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) {return;}
+
+        caphPlayer.player.destroy();
+        createShakaPlayer(caphPlayer.playlist[index]);
+
+        caphPlayer.currentIndex = index;
+        caphPlayer.initPlayerMenu();
+    }
 
     /*
     *   create player's UI template
     */
     var createUI = function(rootNode) {
         var root_ = rootNode;
+        var playButton, subtitleButton;
 
         var loaderElement = $('<div/>', {
             class: 'player-loader',
@@ -250,86 +266,40 @@
         }).appendTo(loaderElement);
 
         /*
-        *   video element
+        *   tracks selected list caphPlayer.videoTracks
         */
-        $('<video/>', {
-            id : 'video',
-            width : '1920px',
-            height : '1080px',
-        }).on('play playing pause waiting process loadedmetadata loadeddata timeupdate error ended', function (event) {
+        function createList(type, data) {
+            caphPlayer.tracksList = $('<div/>', {
+                id:type,
+                class: 'track-list',
+            }).appendTo(root_).hide();
 
-            var self = this;
-            var events = {
-                //Fires when the loading of an audio/video is aborted
-                abort: function () {
-                    console.log('video event [abort]');
-                    loaderElement.show();
-                },
-                //Fires when the audio/video has been started or is no longer paused
-                play: function () {
-                    console.log('video event [play]');
-                    //playButton.toggleClass('icon-play' + ' ' + 'icon-pause');
-                    //$.caph.focus.controllerProvider.getInstance().focus($('#test-btn')[0]);
-                },
-                //Fires when the audio/video is playing after having been paused or stopped for buffering
-                playing: function () {
-                    caphPlayer.startTime = $(self)[0].currentTime;
-                    console.log('video event [playing]');
-                    loaderElement.hide();
+            function createListItem(text, type) {
+                var item = $('<div/>', {
+                    class:'list-item',
+                    focusable: '',
+                    'data-focusable-depth':2
+                }).on('selected', function() {
+                    setTracks(type, $(this).children('#itemText').text());
+                    $('#'+type).slideUp();
+                    $.caph.focus.controllerProvider.getInstance().setDepth(0);
+                });
+                $('<div/>', {
+                    id:'itemText',
+                    text: text,
+                    style:'position: absolute;left: 2px;'
+                }).appendTo(item);
+                $('<div/>', {
+                    id:type+'-'+text+'-'+'check',
+                    class:'fa fa-check check'
+                }).appendTo(item);
+                return item.appendTo(caphPlayer.tracksList);
+            }
 
-                },
-                //Fires when the audio/video has been paused
-                pause: function () {
-                    console.log('video event [pause]');
-                },
-                //Fires when the video stops because it needs to buffer the next frame
-                waiting: function () {
-                    console.log('video event [waiting]');
-                    loaderElement.show();
-                },
-                //Fires when the browser is downloading the audio/video
-                process: function () {
-                    loaderElement.show();
-                    console.log('video event [process]');
-                },
-                //Fires when the browser has loaded meta data for the audio/video
-                loadedmetadata: function () {
-                    console.log('video event [loadedmetadata]');
-                    durationTime.text(caphPlayer.isLive ? 'Live':formatTime($(self)[0].duration));
-                    saveMediaTracks(caphPlayer.player.getTracks());
-
-                    createMenu();
-
-                    if($.isEmptyObject(caphPlayer.textTracks)) disableButton(subtitleButton);
-                },
-                //Fires when the browser has loaded the current frame of the audio/video
-                loadeddata: function () {
-                    console.log('video event [loadeddata]');
-                    loaderElement.hide();
-                    caphPlayer.video.play();
-                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
-                },
-                //Fires when the current playback position has changed
-                timeupdate : function (){
-                    currentTime.text(formatTime(caphPlayer.isLive?($(self)[0].currentTime-caphPlayer.startTime):$(self)[0].currentTime));
-                    infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
-                    processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);
-                    if($(self)[0].buffered.length>0) {
-                        processTransform(loadProcess, ($(self)[0].buffered.end(0))/$(self)[0].duration);
-                    }
-                },
-                //Fires when an error occurred during the loading of an audio/video
-                error: function () {
-                    console.log('video event [error]');
-                },
-                //Fires when the current playlist is ended
-                ended: function () {
-                    console.log('video event [ended]');
-                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
-                }
-            };
-            events[event.type]();
-        }).appendTo(root_);
+            for(var i in data) {
+                createListItem(i, type);
+            }
+        }
 
         /*
         * selected menu
@@ -364,50 +334,7 @@
             $.isEmptyObject(caphPlayer.textTracks) ? null:createMenuItem('Subtitles')&createList('Subtitles',caphPlayer.textTracks);
             $.isEmptyObject(caphPlayer.videoTracks) ? null:createMenuItem('Quality')&createList('Quality',caphPlayer.videoTracks);
             $.isEmptyObject(caphPlayer.audioTracks) ? null:createMenuItem('Audio')&createList('Audio',caphPlayer.audioTracks);
-        };
-        
-
-        /*
-        *   tracks selected list caphPlayer.videoTracks
-        */
-        function createList(type, data) {
-            caphPlayer.tracksList = $('<div/>', {
-                id:type,
-                class: 'track-list',
-            }).appendTo(root_).hide()
-
-            for(var i in data) {
-                createListItem(i, type);
-            }
-
-            function createListItem(text, type) {
-                var item = $('<div/>', {
-                    class:'list-item',
-                    focusable: '',
-                    'data-focusable-depth':2
-                }).on('selected', function() {
-                    setTracks(type, $(this).children('#itemText').text());
-                    $('#'+type).slideUp();
-                    $.caph.focus.controllerProvider.getInstance().setDepth(0);
-                });
-                $('<div/>', {
-                    id:'itemText',
-                    text: text,
-                    style:'position: absolute;left: 2px;'
-                }).appendTo(item);
-                $('<div/>', {
-                    id:type+'-'+text+'-'+'check',
-                    class:'fa fa-check check'
-                }).appendTo(item);
-                return item.appendTo(caphPlayer.tracksList);
-            };
-        };
-
-        caphPlayer.hideSelectedList = function() {
-            $('.menu-bar').hide();
-            $('.track-list').hide();
-            $.caph.focus.controllerProvider.getInstance().setDepth(0);
-        };
+        }
 
         /* 
         *   create process bar
@@ -441,6 +368,108 @@
             class : 'play'
         }).appendTo(processLine);
 
+        //show video resolution in real time
+        var infoElement = $('<div/>', {
+            class: 'infobars'
+        }).appendTo(root_);
+
+        function disableButton(btn) {
+            $(btn).addClass('disable');
+            !$.isEmptyObject(caphPlayer.textTracks) ? caphPlayer.player.setTextTrackVisibility(true): null;
+        }
+        function releaseButton(btn) {
+            $(btn).removeClass('disable');
+            caphPlayer.player.setTextTrackVisibility(false);
+        }
+
+        /*
+        *   video element
+        */
+        $('<video/>', {
+            id : 'video',
+            width : '1920px',
+            height : '1080px',
+        }).on('play playing pause waiting process loadedmetadata loadeddata timeupdate error ended', function (event) {
+
+            var self = this;
+            var events = {
+                //Fires when the loading of an audio/video is aborted
+                abort: function () {
+                    console.log('video event [abort]');
+                    loaderElement.show();
+                },
+                //Fires when the audio/video has been started or is no longer paused
+                play: function () {
+                    console.log('video event [play]');
+                },
+                //Fires when the audio/video is playing after having been paused or stopped for buffering
+                playing: function () {
+                    caphPlayer.startTime = $(self)[0].currentTime;
+                    console.log('video event [playing]');
+                    loaderElement.hide();
+
+                },
+                //Fires when the audio/video has been paused
+                pause: function () {
+                    console.log('video event [pause]');
+                },
+                //Fires when the video stops because it needs to buffer the next frame
+                waiting: function () {
+                    console.log('video event [waiting]');
+                    loaderElement.show();
+                },
+                //Fires when the browser is downloading the audio/video
+                process: function () {
+                    loaderElement.show();
+                    console.log('video event [process]');
+                },
+                //Fires when the browser has loaded meta data for the audio/video
+                loadedmetadata: function () {
+                    console.log('video event [loadedmetadata]');
+                    durationTime.text(caphPlayer.isLive ? 'Live':formatTime($(self)[0].duration));
+                    saveMediaTracks(caphPlayer.player.getTracks());
+
+                    createMenu();
+
+                    if($.isEmptyObject(caphPlayer.textTracks)) {
+                        disableButton(subtitleButton);
+                    }
+                },
+                //Fires when the browser has loaded the current frame of the audio/video
+                loadeddata: function () {
+                    console.log('video event [loadeddata]');
+                    loaderElement.hide();
+                    caphPlayer.video.play();
+                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                },
+                //Fires when the current playback position has changed
+                timeupdate : function (){
+                    currentTime.text(formatTime(caphPlayer.isLive?($(self)[0].currentTime-caphPlayer.startTime):$(self)[0].currentTime));
+                    infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
+                    processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);
+                    if($(self)[0].buffered.length>0) {
+                        processTransform(loadProcess, ($(self)[0].buffered.end(0))/$(self)[0].duration);
+                    }
+                },
+                //Fires when an error occurred during the loading of an audio/video
+                error: function () {
+                    console.log('video event [error]');
+                },
+                //Fires when the current playlist is ended
+                ended: function () {
+                    console.log('video event [ended]');
+                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                }
+            };
+            events[event.type]();
+        }).appendTo(root_);
+
+        caphPlayer.hideSelectedList = function() {
+            $('.menu-bar').hide();
+            $('.track-list').hide();
+            $.caph.focus.controllerProvider.getInstance().setDepth(0);
+        };
+
         /*
         *   control bar
         */
@@ -454,32 +483,32 @@
         /*
         *   video player control buttons
         */
-        var preButton = $('<div/>', {
+        $('<div/>', {
             class : 'button fa fa-step-backward',
             focusable: ''
         }).appendTo(buttonsArea);
-        var backwardButton = $('<div/>', {
+        $('<div/>', {
             class : 'button fa fa-backward',
             focusable: ''
         }).on('selected', function() {
             seekPlayTime('backward',currentTime, playProcess);
         }).appendTo(buttonsArea);        
-        var playButton = $('<div/>', {
+        playButton = $('<div/>', {
             class : 'button fa fa-play',
             focusable: ''
             //'data-focusable-initial-focus': true
         }).on('selected', function() {
-            if(!caphPlayer.video) return;
+            if(!caphPlayer.video) {return;}
             playButton.hasClass('fa-play') ? caphPlayer.video.play() : caphPlayer.video.pause();
             playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
         }).appendTo(buttonsArea);
-        var forwardButton = $('<div/>', {
+        $('<div/>', {
             class : 'button fa fa-forward',
             focusable: ''
         }).on('selected', function() {
             seekPlayTime('forward',currentTime, playProcess);
         }).appendTo(buttonsArea);
-        var nextButton = $('<div/>', {
+        $('<div/>', {
             class : 'button fa fa-step-forward',
             focusable: ''
         }).on('selected', function() {
@@ -492,7 +521,7 @@
         var settingbuttonsArea = $('<div/>', {
             class : 'set-buttons-area'
         }).appendTo(contorlBar);        
-        var settingButton = $('<div/>', {
+        $('<div/>', {
             class : 'button fa fa-cog',//fa-cog  fa-ellipsis-h
             style: 'margin:0px 10px;float: right;',
             focusable: ''
@@ -504,27 +533,18 @@
         /*
         * subtitle button
         */
-        var subtitleButton = $('<div/>', {
-            'data-focusable-depth':"0",
+        subtitleButton = $('<div/>', {
+            'data-focusable-depth':'0',
             class : 'button fa fa-cc',
             style: 'margin:0px 10px;float: right;',
             focusable: ''
         }).on('selected', function(){
-            if($.isEmptyObject(caphPlayer.textTracks)) return;
+            if($.isEmptyObject(caphPlayer.textTracks)) {return;}
 
             setTracks('text', 'en');
             caphPlayer.player.isTextTrackVisible()?releaseButton(this):disableButton(this);
 
         }).appendTo(settingbuttonsArea);
-
-        function disableButton(btn) {
-            $(btn).addClass('disable');
-            !$.isEmptyObject(caphPlayer.textTracks) ? caphPlayer.player.setTextTrackVisibility(true): null;
-        }
-        function releaseButton(btn) {
-            $(btn).removeClass('disable');
-            caphPlayer.player.setTextTrackVisibility(false);
-        }
 
         /*
         *   show caph-list of playlist
@@ -549,9 +569,9 @@
             style:''
         }).appendTo(listArea);
 
-        var itemTemplate = '<div id="<%=index%>" class="item" style="background:url(<%= item.post %>) center center no-repeat; background-size:cover;" focusable>'
-        +'<div hide id="playlist-item-<%=index%>" class="statu-icon fa fa-play-circle-o" aria-hidden="true"></div>'
-        +'</div>'
+        var itemTemplate = '<div id="<%=index%>" class="item" style="background:url(<%= item.post %>) center center no-repeat; background-size:cover;" focusable>'+
+        '<div hide id="playlist-item-<%=index%>" class="statu-icon fa fa-play-circle-o" aria-hidden="true"></div>'+
+        '</div>';
         $('#list1').caphList({
             items: caphPlayer.playlist,
             template: itemTemplate,
@@ -624,13 +644,8 @@
             listArea.hide();
             listTitle.hide();
             barElement.hide();
-        }
+        };
         caphPlayer.hideMenu();
-
-        //show video resolution in real time
-        var infoElement = $('<div/>', {
-            class: 'infobars'
-        }).appendTo(root_);
 
         caphPlayer.initPlayerMenu = function() {
             caphPlayer.updatePlaylistStatus();
@@ -640,7 +655,7 @@
             infoElement.text('');
             processTransform(playProcess, 0);
             processTransform(loadProcess, 0);
-        }
+        };
     };
 
     $(document).on('keydown mouseover', function(event) {
@@ -654,16 +669,6 @@
         }
     });
 
-    function playByIndex(index) {
-        if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) return;
-
-        caphPlayer.player.destroy();
-        createShakaPlayer(caphPlayer.playlist[index]);
-
-        caphPlayer.currentIndex = index;
-        caphPlayer.initPlayerMenu();
-    };
-
     /*
     *   create player
     */
@@ -673,7 +678,7 @@
         caphPlayer.audioTracks = [];
 
         initApp(data);
-    };
+    }
 
     $.fn.caphDashjsPlayer = function(options) {
 

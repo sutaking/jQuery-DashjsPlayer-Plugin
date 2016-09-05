@@ -35,4 +35,4 @@ node_modules
 
 /dist
 /node_modules
-/ut
+/karma_html

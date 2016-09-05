@@ -1,18 +1,6 @@
 (function ($) {
     'use strict';
 
-    var KEY_CODE = {
-        RETURN: 10009,
-        ESC: 27,
-        MEDIA_REWIND: 412,
-        MEDIA_FORWARD: 417,
-        MEDIA_PALY: 415,
-        MEDIA_PAUSE: 19,
-        MEDIA_STOP: 413,
-        MEDIA_TRACK_PREVIOUS: 10232,
-        MEDIA_TRACK_NEXT: 10233
-    }
-
     var PROCESS_BAR_MAX_WIDTH = 1400;
     var SEEK_INTERVAL = 15;
     
@@ -21,7 +9,7 @@
     /*
     *   create ShakaPlayer Object and bind media element
     */
-    function createShakePlayer(asset) {
+    function createShakaPlayer(asset) {
 
         caphPlayer.isLive = false;
         if('features' in asset) {
@@ -93,7 +81,7 @@
             // This executes when the asynchronous check is complete.
             if (support.supported) {
             // Everything looks good!
-            createShakePlayer(asset);
+            createShakaPlayer(asset);
             console.log('TV is supported!');
             } else {
             // This browser does not have the minimum set of APIs we need.
@@ -209,30 +197,30 @@
                     console.log('unknow tracks type')
                     break;
             }
-        });        
+        });
     };
 
     /*
     *   get tracks from local save data.
     */
     function setTracks(type, key) {
-        var t_;
+        var trackVal;
         switch(type){
             case 'Subtitles':
-                t_ = caphPlayer.textTracks[key];
+                trackVal = caphPlayer.textTracks[key];
                 break;
             case 'Quality':
-                t_ = caphPlayer.videoTracks[key];
+                trackVal = caphPlayer.videoTracks[key];
                 break;
             case 'Audio':
-                t_ = caphPlayer.audioTracks[key];
+                trackVal = caphPlayer.audioTracks[key];
                 break;
             default:
                 return;
         }
         updateSelectedItem(type, key);
-        t_ ? caphPlayer.player.selectTrack(t_, true): null;
-        
+        trackVal ? caphPlayer.player.selectTrack(trackVal, true): null;
+
     }
 
     /*
@@ -539,17 +527,18 @@
         }
 
         /*
-        *   show caph-list of playlist 
+        *   show caph-list of playlist
         */
         var listTitle = $('<div>', {
             class: 'list-title'
         }).appendTo(root_);
         $('<div>', {
             class:'title-index fa fa-list-ul',
-            text : ' null'
+            text : ' 1/'+caphPlayer.playlist.length
         }).appendTo(listTitle);
         $('<div>', {
-            class:'title-name'
+            class:'title-name',
+            text: caphPlayer.playlist[caphPlayer.currentIndex].name
         }).appendTo(listTitle);
 
         var listArea = $('<div>', {
@@ -585,14 +574,6 @@
             }
             playByIndex(parseInt(event.target.id));
         });
-        /*$.caph.focus.controllerProvider.onFocused(function(event) {
-            if(event.target.className.indexOf('item')) {
-                $('#list1').animate({bottom: '-70px'});
-                return;
-            }
-            console.log('onFocused');
-            $('#list1').animate({bottom: '90px'});
-        });*/
 
         /*
         *   error dialog
@@ -658,17 +639,14 @@
             currentTime.text('00:00');
             infoElement.text('');
             processTransform(playProcess, 0);
-            processTransform(loadProcess, 0);            
+            processTransform(loadProcess, 0);
         }
-        
     };
 
     $(document).on('keydown mouseover', function(event) {
         caphPlayer.showMenu();
-
         switch(event.keyCode) {
-            case KEY_CODE.ESC:
-            case KEY_CODE.RETURN:
+            case $.caph.focus.Constant.DEFAULT.KEY_MAP.ESC:
                 caphPlayer.hideSelectedList();
                 break;
             default:
@@ -680,10 +658,10 @@
         if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) return;
 
         caphPlayer.player.destroy();
-        createShakePlayer(caphPlayer.playlist[index]);
+        createShakaPlayer(caphPlayer.playlist[index]);
 
         caphPlayer.currentIndex = index;
-        caphPlayer.initPlayerMenu();        
+        caphPlayer.initPlayerMenu();
     };
 
     /*
@@ -721,8 +699,18 @@
         return createPlayer(opt.datas[opt.defaultIndex]);
     };
 
-    /*$(document).ready(function() {
-        $.caph.focus.activate();
-    });*/
+    $(document).ready(function() {
+        $.caph.focus.controllerProvider.setKeyMap({
+            //RETURN: 10009,
+            ESC: 27,
+            MEDIA_REWIND: 412,
+            MEDIA_FORWARD: 417,
+            MEDIA_PALY: 415,
+            MEDIA_PAUSE: 19,
+            MEDIA_STOP: 413,
+            MEDIA_TRACK_PREVIOUS: 10232,
+            MEDIA_TRACK_NEXT: 10233
+        });
+    });
 
 })(jQuery);

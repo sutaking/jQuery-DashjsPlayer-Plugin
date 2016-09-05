@@ -11,7 +11,7 @@ module.exports = function(grunt) {
         jshint: {
             options: {
                 reporter: require('jshint-html-reporter'),
-                reporterOutput: 'build/'+grunt.template.date('yymmddmmss')+'-jshint-report.html',//
+                reporterOutput: 'build/'+grunt.template.date(grunt.template.today() ,'yyyymmdd-hhmmss')+'-jshint-report.html',//
                 jshintrc: jshintrc,
             },
             target: ['src/*.js']

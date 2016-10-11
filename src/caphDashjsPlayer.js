@@ -13,8 +13,12 @@
     function onError(error) {
         console.error('Error code', error.code, 'object', error);
         //alert('Error code: '+ error.code);
-        $('#error-dialog-content').text('Error code: '+ error.code);
-        caphPlayer.errorDialog.caphDialog('open');
+
+        //$('#error-dialog-content').text('Error code: '+ error.code);
+        //caphPlayer.errorDialog.caphDialog('open');
+
+        //for loop video
+        playByIndex(caphPlayer.currentIndex+1);
     }
 
     /*
@@ -241,7 +245,15 @@
     }
 
     function playByIndex(index) {
-        if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) {return;}
+        //if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) {return;}
+        if(index === caphPlayer.currentIndex) {return;}
+
+        else if(index<0) {
+            index = caphPlayer.playlistLength-1;
+        }
+        else if(index+1>caphPlayer.playlistLength) {
+            index = 0;
+        }
 
         caphPlayer.player.destroy();
         createShakaPlayer(caphPlayer.playlist[index]);
@@ -457,8 +469,9 @@
                 },
                 //Fires when the current playlist is ended
                 ended: function () {
-                    console.log('video event [ended]');
+                    console.log('******video event [ended]');
                     playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                    playByIndex(caphPlayer.currentIndex+1);
                 }
             };
             events[event.type]();
@@ -486,6 +499,8 @@
         $('<div/>', {
             class : 'button fa fa-step-backward',
             focusable: ''
+        }).on('selected', function() {
+            playByIndex(caphPlayer.currentIndex-1);
         }).appendTo(buttonsArea);
         $('<div/>', {
             class : 'button fa fa-backward',
@@ -551,7 +566,7 @@
         */
         var listTitle = $('<div>', {
             class: 'list-title'
-        }).appendTo(root_);
+        });//.appendTo(root_);
         $('<div>', {
             class:'title-index fa fa-list-ul',
             text : ' 1/'+caphPlayer.playlist.length
@@ -563,7 +578,7 @@
 
         var listArea = $('<div>', {
             class: 'list-area'
-        }).appendTo(root_);
+        });//.appendTo(root_);
         $('<div>', {
             id:'list1',
             style:''
@@ -600,7 +615,7 @@
         */
         caphPlayer.errorDialog = $('<div/>', {
             class: 'caph-dialog'
-        }).appendTo(root_);
+        });//.appendTo(root_);
         $('<div/>', {
             class: 'caph-dialog-title',
             text: 'CAPH Player Error:'

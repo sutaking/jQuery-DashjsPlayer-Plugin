@@ -245,6 +245,7 @@
     }
 
     function playByIndex(index) {
+        $('#initial-btn').addClass('fa-play').removeClass('fa-pause');
         //if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) {return;}
         if(index === caphPlayer.currentIndex) {return;}
 
@@ -413,6 +414,7 @@
                 //Fires when the audio/video has been started or is no longer paused
                 play: function () {
                     console.log('video event [play]');
+                    playButton.addClass('fa-pause').removeClass('fa-play');
                 },
                 //Fires when the audio/video is playing after having been paused or stopped for buffering
                 playing: function () {
@@ -446,13 +448,15 @@
                     if($.isEmptyObject(caphPlayer.textTracks)) {
                         disableButton(subtitleButton);
                     }
+
                 },
                 //Fires when the browser has loaded the current frame of the audio/video
                 loadeddata: function () {
                     console.log('video event [loadeddata]');
                     loaderElement.hide();
                     caphPlayer.video.play();
-                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                    //playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                    
                 },
                 //Fires when the current playback position has changed
                 timeupdate : function (){
@@ -466,11 +470,13 @@
                 //Fires when an error occurred during the loading of an audio/video
                 error: function () {
                     console.log('video event [error]');
+                    playButton.addClass('fa-play').removeClass('fa-pause');
                 },
                 //Fires when the current playlist is ended
                 ended: function () {
                     console.log('******video event [ended]');
-                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                    //playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                    playButton.addClass('fa-play').removeClass('fa-pause');
                     playByIndex(caphPlayer.currentIndex+1);
                 }
             };
@@ -496,7 +502,7 @@
         /*
         *   video player control buttons
         */
-        var ttBtn = $('<div/>', {
+        $('<div/>', {
             class : 'button fa fa-step-backward',
             focusable: ''
         }).on('selected', function() {
@@ -511,13 +517,18 @@
         playButton = $('<div/>', {
             id : 'initial-btn',
             class : 'button fa fa-play',
-            focusable: '',
-            'data-focusable-initial-focus': true
+            focusable: ''
+            //'data-focusable-initial-focus': true
         }).on('selected', function() {
             if(!caphPlayer.video) {return;}
-            playButton.hasClass('fa-play') ? caphPlayer.video.play() : caphPlayer.video.pause();
-            playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
-            
+            if(playButton.hasClass('fa-play')) {
+                caphPlayer.video.play();
+                playButton.addClass('fa-pause').removeClass('fa-play');
+            }
+            else {
+                caphPlayer.video.pause();
+                playButton.addClass('fa-play').removeClass('fa-pause');
+            }
         }).appendTo(buttonsArea);
         $('<div/>', {
             class : 'button fa fa-forward',
@@ -678,7 +689,6 @@
     $(document).on('keydown mouseover', function(event) {
 
         caphPlayer.showMenu();
-        
         switch(event.keyCode) {
             case $.caph.focus.Constant.DEFAULT.KEY_MAP.ESC:
                 caphPlayer.hideSelectedList();

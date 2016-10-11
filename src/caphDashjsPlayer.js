@@ -425,6 +425,7 @@
                 },
                 //Fires when the audio/video has been paused
                 pause: function () {
+                    playButton.addClass('fa-play').removeClass('fa-pause');
                     console.log('video event [pause]');
                 },
                 //Fires when the video stops because it needs to buffer the next frame
@@ -521,14 +522,16 @@
             //'data-focusable-initial-focus': true
         }).on('selected', function() {
             if(!caphPlayer.video) {return;}
-            if(playButton.hasClass('fa-play')) {
+            playButton.hasClass('fa-play')?caphPlayer.video.play():caphPlayer.video.pause();
+
+            /*if(playButton.hasClass('fa-play')) {
                 caphPlayer.video.play();
                 playButton.addClass('fa-pause').removeClass('fa-play');
             }
             else {
                 caphPlayer.video.pause();
                 playButton.addClass('fa-play').removeClass('fa-pause');
-            }
+            }*/
         }).appendTo(buttonsArea);
         $('<div/>', {
             class : 'button fa fa-forward',

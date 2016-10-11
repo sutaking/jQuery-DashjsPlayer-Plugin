@@ -496,7 +496,7 @@
         /*
         *   video player control buttons
         */
-        $('<div/>', {
+        var ttBtn = $('<div/>', {
             class : 'button fa fa-step-backward',
             focusable: ''
         }).on('selected', function() {
@@ -509,13 +509,15 @@
             seekPlayTime('backward',currentTime, playProcess);
         }).appendTo(buttonsArea);        
         playButton = $('<div/>', {
+            id : 'initial-btn',
             class : 'button fa fa-play',
-            focusable: ''
-            //'data-focusable-initial-focus': true
+            focusable: '',
+            'data-focusable-initial-focus': true
         }).on('selected', function() {
             if(!caphPlayer.video) {return;}
             playButton.hasClass('fa-play') ? caphPlayer.video.play() : caphPlayer.video.pause();
             playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+            
         }).appendTo(buttonsArea);
         $('<div/>', {
             class : 'button fa fa-forward',
@@ -674,7 +676,9 @@
     };
 
     $(document).on('keydown mouseover', function(event) {
+
         caphPlayer.showMenu();
+        
         switch(event.keyCode) {
             case $.caph.focus.Constant.DEFAULT.KEY_MAP.ESC:
                 caphPlayer.hideSelectedList();
@@ -720,6 +724,7 @@
     };
 
     $(document).ready(function() {
+        $.caph.focus.controllerProvider.getInstance().focus($('#initial-btn')[0]);
         $.caph.focus.controllerProvider.setKeyMap({
             //RETURN: 10009,
             ESC: 27,

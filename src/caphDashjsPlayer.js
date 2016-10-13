@@ -382,9 +382,9 @@
         }).appendTo(processLine);
 
         //show video resolution in real time
-        var infoElement = $('<div/>', {
+        /*var infoElement = $('<div/>', {
             class: 'infobars'
-        }).appendTo(root_);
+        }).appendTo(root_);*/
 
         function disableButton(btn) {
             $(btn).addClass('disable');
@@ -462,7 +462,7 @@
                 //Fires when the current playback position has changed
                 timeupdate : function (){
                     currentTime.text(formatTime(caphPlayer.isLive?($(self)[0].currentTime-caphPlayer.startTime):$(self)[0].currentTime));
-                    infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
+                    //infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
                     processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);
                     if($(self)[0].buffered.length>0) {
                         processTransform(loadProcess, ($(self)[0].buffered.end(0))/$(self)[0].duration);
@@ -683,7 +683,7 @@
             loadIcon.show();
             releaseButton(subtitleButton);
             currentTime.text('00:00');
-            infoElement.text('');
+            //infoElement.text('');
             processTransform(playProcess, 0);
             processTransform(loadProcess, 0);
         };

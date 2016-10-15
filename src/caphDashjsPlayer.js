@@ -225,7 +225,7 @@
     *   get tracks from local save data.
     */
     function setTracks(type, key) {
-        //$('.player-loader').show();
+        $('.player-loader').show();
         var trackVal;
         switch(type){
             case 'Subtitles':
@@ -716,6 +716,7 @@
 
         caphPlayer.showMenu();
         switch(event.keyCode) {
+            case 10099:
             case $.caph.focus.Constant.DEFAULT.KEY_MAP.ESC:
                 caphPlayer.hideSelectedList();
                 break;

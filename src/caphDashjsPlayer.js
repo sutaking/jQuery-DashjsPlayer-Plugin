@@ -225,6 +225,7 @@
     *   get tracks from local save data.
     */
     function setTracks(type, key) {
+        //$('.player-loader').show();
         var trackVal;
         switch(type){
             case 'Subtitles':
@@ -241,11 +242,12 @@
         }
         updateSelectedItem(type, key);
         trackVal ? caphPlayer.player.selectTrack(trackVal, true): null;
-
     }
 
     function playByIndex(index) {
         $('#initial-btn').addClass('fa-play').removeClass('fa-pause');
+        $('.player-loader').show();
+        $('#subtitle-btn').addClass('disable');
         //if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) {return;}
         if(index === caphPlayer.currentIndex) {return;}
 
@@ -257,6 +259,9 @@
         }
 
         caphPlayer.player.destroy();
+        caphPlayer.videoTracks = [];
+        caphPlayer.textTracks = [];
+        caphPlayer.audioTracks = [];
         createShakaPlayer(caphPlayer.playlist[index]);
 
         caphPlayer.currentIndex = index;
@@ -318,9 +323,15 @@
         * selected menu
         */
         function createMenu() {
+            $('.menu-bar').remove();
+            $('#Subtitles').remove();
+            $('#Quality').remove();
+            $('#Audio').remove();
+
             caphPlayer.menuBar = $('<div/>',{
                 class: 'menu-bar'
             }).appendTo(root_).hide();
+
 
             function createMenuItem(text) {
                 var item = $('<div/>', {
@@ -567,6 +578,7 @@
         subtitleButton = $('<div/>', {
             'data-focusable-depth':'0',
             class : 'button fa fa-cc',
+            id: 'subtitle-btn',
             style: 'margin:0px 10px;float: right;',
             focusable: ''
         }).on('selected', function(){
@@ -683,6 +695,7 @@
             loadIcon.show();
             releaseButton(subtitleButton);
             currentTime.text('00:00');
+            durationTime.text('00:00');
             //infoElement.text('');
             processTransform(playProcess, 0);
             processTransform(loadProcess, 0);

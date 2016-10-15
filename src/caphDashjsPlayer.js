@@ -439,8 +439,7 @@
                 playing: function () {
                     caphPlayer.startTime = $(self)[0].currentTime;
                     console.log('video event [playing]');
-                    loaderElement.hide();
-
+                    //loaderElement.hide();
                 },
                 //Fires when the audio/video has been paused
                 pause: function () {
@@ -449,8 +448,8 @@
                 },
                 //Fires when the video stops because it needs to buffer the next frame
                 waiting: function () {
-                    console.log('video event [waiting]');
                     loaderElement.show();
+                    console.log('video event [waiting]');
                 },
                 //Fires when the browser is downloading the audio/video
                 process: function () {
@@ -480,6 +479,7 @@
                 },
                 //Fires when the current playback position has changed
                 timeupdate : function (){
+                    loaderElement.hide();
                     currentTime.text(formatTime(caphPlayer.isLive?($(self)[0].currentTime-caphPlayer.startTime):$(self)[0].currentTime));
                     //infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
                     processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);

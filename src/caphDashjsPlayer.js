@@ -243,11 +243,19 @@
         updateSelectedItem(type, key);
         trackVal ? caphPlayer.player.selectTrack(trackVal, true): null;
     }
-
+    
     function playByIndex(index) {
+        var timeStamp = Date.now();
+        if((timeStamp-caphPlayer.playNextID) <= 2000) {
+            caphPlayer.playNextID = Date.now();
+            return;
+        }
+        caphPlayer.playNextID = Date.now();
+
         $('#initial-btn').addClass('fa-play').removeClass('fa-pause');
         $('.player-loader').show();
         $('#subtitle-btn').addClass('disable');
+
         //if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) {return;}
         if(index === caphPlayer.currentIndex) {return;}
 
@@ -524,6 +532,7 @@
             class : 'button fa fa-backward',
             focusable: ''
         }).on('selected', function() {
+            loaderElement.show();
             seekPlayTime('backward',currentTime, playProcess);
         }).appendTo(buttonsArea);        
         playButton = $('<div/>', {
@@ -548,6 +557,7 @@
             class : 'button fa fa-forward',
             focusable: ''
         }).on('selected', function() {
+            loaderElement.show();
             seekPlayTime('forward',currentTime, playProcess);
         }).appendTo(buttonsArea);
         $('<div/>', {
@@ -671,11 +681,11 @@
         });
 
         caphPlayer.showMenu = function() {
-            clearInterval(caphPlayer.menuHideID);
+            clearTimeout(caphPlayer.menuHideID);
             listArea.show();
             listTitle.show();
-            barElement.show();
-            caphPlayer.menuHideID = setInterval(function() {
+            barElement.show();//setInterval
+            caphPlayer.menuHideID = setTimeout(function() {
                 caphPlayer.hideMenu();
             }, 5000);
         };

@@ -225,7 +225,6 @@
     *   get tracks from local save data.
     */
     function setTracks(type, key) {
-        $('.player-loader').show();
         var trackVal;
         switch(type){
             case 'Subtitles':
@@ -246,7 +245,7 @@
     
     function playByIndex(index) {
         var timeStamp = Date.now();
-        if((timeStamp-caphPlayer.playNextID) <= 2000) {
+        if((timeStamp-caphPlayer.playNextID) <= 1000) {
             caphPlayer.playNextID = Date.now();
             return;
         }
@@ -270,10 +269,11 @@
         caphPlayer.videoTracks = [];
         caphPlayer.textTracks = [];
         caphPlayer.audioTracks = [];
-        createShakaPlayer(caphPlayer.playlist[index]);
 
-        caphPlayer.currentIndex = index;
+        createShakaPlayer(caphPlayer.playlist[index]);
         caphPlayer.initPlayerMenu();
+        caphPlayer.currentIndex = index;
+        
     }
 
     /*
@@ -474,8 +474,6 @@
                     console.log('video event [loadeddata]');
                     loaderElement.hide();
                     caphPlayer.video.play();
-                    //playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
-                    
                 },
                 //Fires when the current playback position has changed
                 timeupdate : function (){
@@ -682,10 +680,10 @@
 
         caphPlayer.showMenu = function() {
             clearTimeout(caphPlayer.menuHideID);
+            barElement.show();
             listArea.show();
             listTitle.show();
-            barElement.show();//setInterval
-            caphPlayer.menuHideID = setTimeout(function() {
+            caphPlayer.menuHideID = setTimeout(function() {//setInterval
                 caphPlayer.hideMenu();
             }, 5000);
         };
@@ -709,6 +707,9 @@
             //infoElement.text('');
             processTransform(playProcess, 0);
             processTransform(loadProcess, 0);
+            //先开加GPU加速管用不，不行的话直接加背景色。
+            //processBar.css({background: 'rgba(150, 153, 159, .1)'});
+            //contorlBar.css({background: 'rgba(150, 153, 159, .2)'});
         };
     };
 
@@ -716,7 +717,7 @@
 
         caphPlayer.showMenu();
         switch(event.keyCode) {
-            case 10099:
+            case $.caph.focus.Constant.DEFAULT.KEY_MAP.RETURN:
             case $.caph.focus.Constant.DEFAULT.KEY_MAP.ESC:
                 caphPlayer.hideSelectedList();
                 break;
@@ -763,7 +764,7 @@
     $(document).ready(function() {
         $.caph.focus.controllerProvider.getInstance().focus($('#initial-btn')[0]);
         $.caph.focus.controllerProvider.setKeyMap({
-            //RETURN: 10009,
+            RETURN: 10009,
             ESC: 27,
             MEDIA_REWIND: 412,
             MEDIA_FORWARD: 417,

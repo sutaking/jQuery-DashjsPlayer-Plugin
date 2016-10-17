@@ -195,7 +195,7 @@
         caphPlayer.timeId_ = setTimeout(function(){
             caphPlayer.video.currentTime = caphPlayer.seekValue;
             caphPlayer.seekValue = null;
-            caphPlayer.video.play();
+            //caphPlayer.video.play();
             console.log('seektime: '+caphPlayer.video.currentTime);
         },300);
         

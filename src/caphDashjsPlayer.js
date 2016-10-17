@@ -123,7 +123,6 @@
         console.log('seektime: '+val);
         caphPlayer.timeId_ = null;
         caphPlayer.video.currentTime = val;
-        caphPlayer.video.play();
     }
 
     /*
@@ -170,23 +169,36 @@
     /*
     *   prepare seek media source by timeout
     */
+    caphPlayer.seekValue = null;
     function seekPlayTime(type, currentTime, playProcess) {
-
-        caphPlayer.video.waiting;
+        
         //1st update UI right way
-        var seekValue = caphPlayer.video.currentTime;
-        if(type === 'forward') { seekValue += SEEK_INTERVAL;}
-        else{ seekValue -= SEEK_INTERVAL;}
+        caphPlayer.video.pause();
+        if(caphPlayer.seekValue === null) {
+            caphPlayer.seekValue = caphPlayer.video.currentTime;
+        }
 
-        if(seekValue>caphPlayer.video.duration){seekValue=caphPlayer.video.duration;}
-        else if(seekValue<0){seekValue=0;}
+        if(type === 'forward') { caphPlayer.seekValue += SEEK_INTERVAL;}
+        else{ caphPlayer.seekValue -= SEEK_INTERVAL;}
 
-        currentTime.text(formatTime(seekValue));
-        processTransform(playProcess, seekValue/caphPlayer.video.duration);
+        if(caphPlayer.seekValue>caphPlayer.video.duration){caphPlayer.seekValue=caphPlayer.video.duration;}
+        else if(caphPlayer.seekValue<0){caphPlayer.seekValue=0;}
+
+        currentTime.text(formatTime(caphPlayer.seekValue));
+        processTransform(playProcess, caphPlayer.seekValue/caphPlayer.video.duration);
 
         // collect input evnets and seek.
-        if(caphPlayer.timeId_ !== null) {clearTimeout(caphPlayer.timeId_);}
-        caphPlayer.timeId_ = setTimeout(onSeekTime_(seekValue), 100);
+        //if(caphPlayer.timeId_ !== null) {clearTimeout(caphPlayer.timeId_);}
+        //caphPlayer.timeId_ = setTimeout(onSeekTime_(caphPlayer.seekValue), 5000);
+        
+        clearTimeout(caphPlayer.timeId_);
+        caphPlayer.timeId_ = setTimeout(function(){
+            caphPlayer.video.currentTime = caphPlayer.seekValue;
+            caphPlayer.seekValue = null;
+            caphPlayer.video.play();
+            console.log('seektime: '+caphPlayer.video.currentTime);
+        },300);
+        
     }
 
     /*
@@ -480,6 +492,7 @@
                 },
                 //Fires when the current playback position has changed
                 timeupdate : function (){
+                    if(caphPlayer.seekValue !== null) {return;}
                     loaderElement.hide();
                     currentTime.text(formatTime(caphPlayer.isLive?($(self)[0].currentTime-caphPlayer.startTime):$(self)[0].currentTime));
                     //infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);

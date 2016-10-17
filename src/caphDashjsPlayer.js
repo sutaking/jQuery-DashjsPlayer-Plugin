@@ -251,9 +251,10 @@
         }
         caphPlayer.playNextID = Date.now();
 
-        $('#initial-btn').addClass('fa-play').removeClass('fa-pause');
+        caphPlayer.preventKeyDown = true;
         $('.player-loader').show();
-        $('#subtitle-btn').addClass('disable');
+        caphPlayer.hideMenu();
+        $('#initial-btn').addClass('fa-play').removeClass('fa-pause');
 
         //if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) {return;}
         if(index === caphPlayer.currentIndex) {return;}
@@ -699,7 +700,7 @@
         caphPlayer.hideMenu();
 
         caphPlayer.initPlayerMenu = function() {
-            caphPlayer.updatePlaylistStatus();
+            //caphPlayer.updatePlaylistStatus();
             loadIcon.show();
             releaseButton(subtitleButton);
             currentTime.text('00:00');
@@ -707,14 +708,15 @@
             //infoElement.text('');
             processTransform(playProcess, 0);
             processTransform(loadProcess, 0);
-            //先开加GPU加速管用不，不行的话直接加背景色。
-            //processBar.css({background: 'rgba(150, 153, 159, .1)'});
-            //contorlBar.css({background: 'rgba(150, 153, 159, .2)'});
+            $.caph.focus.controllerProvider.getInstance().focus($('#initial-btn')[0]);
         };
     };
 
     $(document).on('keydown mouseover', function(event) {
-
+        if(caphPlayer.preventKeyDown) {
+            caphPlayer.preventKeyDown = false;
+            return;
+        }
         caphPlayer.showMenu();
         switch(event.keyCode) {
             case $.caph.focus.Constant.DEFAULT.KEY_MAP.RETURN:

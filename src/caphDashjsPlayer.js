@@ -12,12 +12,12 @@
     */
     function onError(error) {
         console.error('Error code', error.code, 'object', error);
-        //alert('Error code: '+ error.code);
 
         //$('#error-dialog-content').text('Error code: '+ error.code);
         //caphPlayer.errorDialog.caphDialog('open');
 
         //for loop video
+        console.log('Error code: '+ error.code);
         playByIndex(caphPlayer.currentIndex+1);
     }
 
@@ -120,9 +120,10 @@
     *   seek media source current time.
     */
     function onSeekTime_(val) {
-        //console.log('seektime: '+val);
+        console.log('seektime: '+val);
         caphPlayer.timeId_ = null;
         caphPlayer.video.currentTime = val;
+        caphPlayer.video.play();
     }
 
     /*
@@ -171,6 +172,7 @@
     */
     function seekPlayTime(type, currentTime, playProcess) {
 
+        caphPlayer.video.waiting;
         //1st update UI right way
         var seekValue = caphPlayer.video.currentTime;
         if(type === 'forward') { seekValue += SEEK_INTERVAL;}
@@ -183,8 +185,8 @@
         processTransform(playProcess, seekValue/caphPlayer.video.duration);
 
         // collect input evnets and seek.
-        if(caphPlayer.timeId_ !== null) {clearInterval(caphPlayer.timeId_);}
-        caphPlayer.timeId_ = setInterval(onSeekTime_(seekValue), 100);
+        if(caphPlayer.timeId_ !== null) {clearTimeout(caphPlayer.timeId_);}
+        caphPlayer.timeId_ = setTimeout(onSeekTime_(seekValue), 100);
     }
 
     /*

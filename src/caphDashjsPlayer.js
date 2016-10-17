@@ -16,6 +16,7 @@
         //$('#error-dialog-content').text('Error code: '+ error.code);
         //caphPlayer.errorDialog.caphDialog('open');
 
+        if(error.code === 3015 || error.code === 3016) {return;}
         //for loop video
         console.log('Error code: '+ error.code);
         playByIndex(caphPlayer.currentIndex+1);
@@ -173,10 +174,10 @@
     function seekPlayTime(type, currentTime, playProcess) {
         
         //1st update UI right way
-        caphPlayer.video.pause();
-        if(caphPlayer.seekValue === null) {
+        //caphPlayer.video.pause();
+        //if(caphPlayer.seekValue === null) {
             caphPlayer.seekValue = caphPlayer.video.currentTime;
-        }
+        //}
 
         if(type === 'forward') { caphPlayer.seekValue += SEEK_INTERVAL;}
         else{ caphPlayer.seekValue -= SEEK_INTERVAL;}
@@ -191,13 +192,15 @@
         //if(caphPlayer.timeId_ !== null) {clearTimeout(caphPlayer.timeId_);}
         //caphPlayer.timeId_ = setTimeout(onSeekTime_(caphPlayer.seekValue), 5000);
         
-        clearTimeout(caphPlayer.timeId_);
+        caphPlayer.video.currentTime = caphPlayer.seekValue;
+
+        /*clearTimeout(caphPlayer.timeId_);
         caphPlayer.timeId_ = setTimeout(function(){
             caphPlayer.video.currentTime = caphPlayer.seekValue;
             caphPlayer.seekValue = null;
             caphPlayer.video.play();
             console.log('seektime: '+caphPlayer.video.currentTime);
-        },300);
+        },300);*/
         
     }
 
@@ -492,7 +495,7 @@
                 },
                 //Fires when the current playback position has changed
                 timeupdate : function (){
-                    if(caphPlayer.seekValue !== null) {return;}
+                    //if(caphPlayer.seekValue !== null) {return;}
                     loaderElement.hide();
                     currentTime.text(formatTime(caphPlayer.isLive?($(self)[0].currentTime-caphPlayer.startTime):$(self)[0].currentTime));
                     //infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);

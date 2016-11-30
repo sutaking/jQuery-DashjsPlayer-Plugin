@@ -419,9 +419,9 @@
         }).appendTo(processLine);
 
         //show video resolution in real time
-        /*var infoElement = $('<div/>', {
+        var infoElement = $('<div/>', {
             class: 'infobars'
-        }).appendTo(root_);*/
+        }).appendTo(root_);
 
         function disableButton(btn) {
             $(btn).addClass('disable');
@@ -435,7 +435,7 @@
         /*
         *   video element
         */
-        $('<video/>', {
+        var videoTag = $('<video/>', {
             id : 'video',
             width : '1920px',
             height : '1080px',
@@ -621,7 +621,7 @@
         */
         var listTitle = $('<div>', {
             class: 'list-title'
-        });//.appendTo(root_);
+        }).appendTo(root_);
         $('<div>', {
             class:'title-index fa fa-list-ul',
             text : ' 1/'+caphPlayer.playlist.length
@@ -633,7 +633,7 @@
 
         var listArea = $('<div>', {
             class: 'list-area'
-        });//.appendTo(root_);
+        }).appendTo(root_);
         $('<div>', {
             id:'list1',
             style:''

@@ -12,9 +12,14 @@
     */
     function onError(error) {
         console.error('Error code', error.code, 'object', error);
-        //alert('Error code: '+ error.code);
-        $('#error-dialog-content').text('Error code: '+ error.code);
-        caphPlayer.errorDialog.caphDialog('open');
+
+        //$('#error-dialog-content').text('Error code: '+ error.code);
+        //caphPlayer.errorDialog.caphDialog('open');
+
+        if(error.code === 3015 || error.code === 3016) {return;}
+        //for loop video
+        console.log('Error code: '+ error.code);
+        playByIndex(caphPlayer.currentIndex+1);
     }
 
     /*
@@ -116,7 +121,7 @@
     *   seek media source current time.
     */
     function onSeekTime_(val) {
-        //console.log('seektime: '+val);
+        console.log('seektime: '+val);
         caphPlayer.timeId_ = null;
         caphPlayer.video.currentTime = val;
     }
@@ -165,22 +170,38 @@
     /*
     *   prepare seek media source by timeout
     */
+    caphPlayer.seekValue = null;
     function seekPlayTime(type, currentTime, playProcess) {
-
+        
         //1st update UI right way
-        var seekValue = caphPlayer.video.currentTime;
-        if(type === 'forward') { seekValue += SEEK_INTERVAL;}
-        else{ seekValue -= SEEK_INTERVAL;}
+        //caphPlayer.video.pause();
+        //if(caphPlayer.seekValue === null) {
+            caphPlayer.seekValue = caphPlayer.video.currentTime;
+        //}
 
-        if(seekValue>caphPlayer.video.duration){seekValue=caphPlayer.video.duration;}
-        else if(seekValue<0){seekValue=0;}
+        if(type === 'forward') { caphPlayer.seekValue += SEEK_INTERVAL;}
+        else{ caphPlayer.seekValue -= SEEK_INTERVAL;}
 
-        currentTime.text(formatTime(seekValue));
-        processTransform(playProcess, seekValue/caphPlayer.video.duration);
+        if(caphPlayer.seekValue>caphPlayer.video.duration){caphPlayer.seekValue=caphPlayer.video.duration;}
+        else if(caphPlayer.seekValue<0){caphPlayer.seekValue=0;}
+
+        currentTime.text(formatTime(caphPlayer.seekValue));
+        processTransform(playProcess, caphPlayer.seekValue/caphPlayer.video.duration);
 
         // collect input evnets and seek.
-        if(caphPlayer.timeId_ !== null) {clearInterval(caphPlayer.timeId_);}
-        caphPlayer.timeId_ = setInterval(onSeekTime_(seekValue), 100);
+        //if(caphPlayer.timeId_ !== null) {clearTimeout(caphPlayer.timeId_);}
+        //caphPlayer.timeId_ = setTimeout(onSeekTime_(caphPlayer.seekValue), 5000);
+        
+        caphPlayer.video.currentTime = caphPlayer.seekValue;
+
+        /*clearTimeout(caphPlayer.timeId_);
+        caphPlayer.timeId_ = setTimeout(function(){
+            caphPlayer.video.currentTime = caphPlayer.seekValue;
+            caphPlayer.seekValue = null;
+            //caphPlayer.video.play();
+            console.log('seektime: '+caphPlayer.video.currentTime);
+        },300);*/
+        
     }
 
     /*
@@ -237,17 +258,40 @@
         }
         updateSelectedItem(type, key);
         trackVal ? caphPlayer.player.selectTrack(trackVal, true): null;
-
     }
-
+    
     function playByIndex(index) {
-        if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) {return;}
+        var timeStamp = Date.now();
+        if((timeStamp-caphPlayer.playNextID) <= 1000) {
+            caphPlayer.playNextID = Date.now();
+            return;
+        }
+        caphPlayer.playNextID = Date.now();
+
+        caphPlayer.preventKeyDown = true;
+        $('.player-loader').show();
+        caphPlayer.hideMenu();
+        $('#initial-btn').addClass('fa-play').removeClass('fa-pause');
+
+        //if(index === caphPlayer.currentIndex ||index<0 || index+1>caphPlayer.playlistLength) {return;}
+        if(index === caphPlayer.currentIndex) {return;}
+
+        else if(index<0) {
+            index = caphPlayer.playlistLength-1;
+        }
+        else if(index+1>caphPlayer.playlistLength) {
+            index = 0;
+        }
 
         caphPlayer.player.destroy();
-        createShakaPlayer(caphPlayer.playlist[index]);
+        caphPlayer.videoTracks = [];
+        caphPlayer.textTracks = [];
+        caphPlayer.audioTracks = [];
 
-        caphPlayer.currentIndex = index;
+        createShakaPlayer(caphPlayer.playlist[index]);
         caphPlayer.initPlayerMenu();
+        caphPlayer.currentIndex = index;
+        
     }
 
     /*
@@ -305,9 +349,15 @@
         * selected menu
         */
         function createMenu() {
+            $('.menu-bar').remove();
+            $('#Subtitles').remove();
+            $('#Quality').remove();
+            $('#Audio').remove();
+
             caphPlayer.menuBar = $('<div/>',{
                 class: 'menu-bar'
             }).appendTo(root_).hide();
+
 
             function createMenuItem(text) {
                 var item = $('<div/>', {
@@ -385,7 +435,7 @@
         /*
         *   video element
         */
-        $('<video/>', {
+        var videoTag = $('<video/>', {
             id : 'video',
             width : '1920px',
             height : '1080px',
@@ -401,22 +451,23 @@
                 //Fires when the audio/video has been started or is no longer paused
                 play: function () {
                     console.log('video event [play]');
+                    playButton.addClass('fa-pause').removeClass('fa-play');
                 },
                 //Fires when the audio/video is playing after having been paused or stopped for buffering
                 playing: function () {
                     caphPlayer.startTime = $(self)[0].currentTime;
                     console.log('video event [playing]');
-                    loaderElement.hide();
-
+                    //loaderElement.hide();
                 },
                 //Fires when the audio/video has been paused
                 pause: function () {
+                    playButton.addClass('fa-play').removeClass('fa-pause');
                     console.log('video event [pause]');
                 },
                 //Fires when the video stops because it needs to buffer the next frame
                 waiting: function () {
-                    console.log('video event [waiting]');
                     loaderElement.show();
+                    console.log('video event [waiting]');
                 },
                 //Fires when the browser is downloading the audio/video
                 process: function () {
@@ -434,18 +485,20 @@
                     if($.isEmptyObject(caphPlayer.textTracks)) {
                         disableButton(subtitleButton);
                     }
+
                 },
                 //Fires when the browser has loaded the current frame of the audio/video
                 loadeddata: function () {
                     console.log('video event [loadeddata]');
                     loaderElement.hide();
                     caphPlayer.video.play();
-                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
                 },
                 //Fires when the current playback position has changed
                 timeupdate : function (){
+                    //if(caphPlayer.seekValue !== null) {return;}
+                    loaderElement.hide();
                     currentTime.text(formatTime(caphPlayer.isLive?($(self)[0].currentTime-caphPlayer.startTime):$(self)[0].currentTime));
-                    infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
+                    //infoElement.text($(self)[0].videoWidth + ' x ' + $(self)[0].videoHeight);
                     processTransform(playProcess, $(self)[0].currentTime/$(self)[0].duration);
                     if($(self)[0].buffered.length>0) {
                         processTransform(loadProcess, ($(self)[0].buffered.end(0))/$(self)[0].duration);
@@ -454,11 +507,14 @@
                 //Fires when an error occurred during the loading of an audio/video
                 error: function () {
                     console.log('video event [error]');
+                    playButton.addClass('fa-play').removeClass('fa-pause');
                 },
                 //Fires when the current playlist is ended
                 ended: function () {
-                    console.log('video event [ended]');
-                    playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                    console.log('******video event [ended]');
+                    //playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+                    playButton.addClass('fa-play').removeClass('fa-pause');
+                    playByIndex(caphPlayer.currentIndex+1);
                 }
             };
             events[event.type]();
@@ -486,26 +542,39 @@
         $('<div/>', {
             class : 'button fa fa-step-backward',
             focusable: ''
+        }).on('selected', function() {
+            playByIndex(caphPlayer.currentIndex-1);
         }).appendTo(buttonsArea);
         $('<div/>', {
             class : 'button fa fa-backward',
             focusable: ''
         }).on('selected', function() {
+            loaderElement.show();
             seekPlayTime('backward',currentTime, playProcess);
         }).appendTo(buttonsArea);        
         playButton = $('<div/>', {
+            id : 'initial-btn',
             class : 'button fa fa-play',
             focusable: ''
             //'data-focusable-initial-focus': true
         }).on('selected', function() {
             if(!caphPlayer.video) {return;}
-            playButton.hasClass('fa-play') ? caphPlayer.video.play() : caphPlayer.video.pause();
-            playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
+            playButton.hasClass('fa-play')?caphPlayer.video.play():caphPlayer.video.pause();
+
+            /*if(playButton.hasClass('fa-play')) {
+                caphPlayer.video.play();
+                playButton.addClass('fa-pause').removeClass('fa-play');
+            }
+            else {
+                caphPlayer.video.pause();
+                playButton.addClass('fa-play').removeClass('fa-pause');
+            }*/
         }).appendTo(buttonsArea);
         $('<div/>', {
             class : 'button fa fa-forward',
             focusable: ''
         }).on('selected', function() {
+            loaderElement.show();
             seekPlayTime('forward',currentTime, playProcess);
         }).appendTo(buttonsArea);
         $('<div/>', {
@@ -536,6 +605,7 @@
         subtitleButton = $('<div/>', {
             'data-focusable-depth':'0',
             class : 'button fa fa-cc',
+            id: 'subtitle-btn',
             style: 'margin:0px 10px;float: right;',
             focusable: ''
         }).on('selected', function(){
@@ -600,7 +670,7 @@
         */
         caphPlayer.errorDialog = $('<div/>', {
             class: 'caph-dialog'
-        }).appendTo(root_);
+        });//.appendTo(root_);
         $('<div/>', {
             class: 'caph-dialog-title',
             text: 'CAPH Player Error:'
@@ -628,11 +698,11 @@
         });
 
         caphPlayer.showMenu = function() {
-            clearInterval(caphPlayer.menuHideID);
+            clearTimeout(caphPlayer.menuHideID);
+            barElement.show();
             listArea.show();
             listTitle.show();
-            barElement.show();
-            caphPlayer.menuHideID = setInterval(function() {
+            caphPlayer.menuHideID = setTimeout(function() {//setInterval
                 caphPlayer.hideMenu();
             }, 5000);
         };
@@ -648,19 +718,26 @@
         caphPlayer.hideMenu();
 
         caphPlayer.initPlayerMenu = function() {
-            caphPlayer.updatePlaylistStatus();
+            //caphPlayer.updatePlaylistStatus();
             loadIcon.show();
             releaseButton(subtitleButton);
             currentTime.text('00:00');
-            infoElement.text('');
+            durationTime.text('00:00');
+            //infoElement.text('');
             processTransform(playProcess, 0);
             processTransform(loadProcess, 0);
+            $.caph.focus.controllerProvider.getInstance().focus($('#initial-btn')[0]);
         };
     };
 
     $(document).on('keydown mouseover', function(event) {
+        if(caphPlayer.preventKeyDown) {
+            caphPlayer.preventKeyDown = false;
+            return;
+        }
         caphPlayer.showMenu();
         switch(event.keyCode) {
+            case $.caph.focus.Constant.DEFAULT.KEY_MAP.RETURN:
             case $.caph.focus.Constant.DEFAULT.KEY_MAP.ESC:
                 caphPlayer.hideSelectedList();
                 break;
@@ -705,8 +782,9 @@
     };
 
     $(document).ready(function() {
+        $.caph.focus.controllerProvider.getInstance().focus($('#initial-btn')[0]);
         $.caph.focus.controllerProvider.setKeyMap({
-            //RETURN: 10009,
+            RETURN: 10009,
             ESC: 27,
             MEDIA_REWIND: 412,
             MEDIA_FORWARD: 417,

@@ -13,13 +13,13 @@
     function onError(error) {
         console.error('Error code', error.code, 'object', error);
 
-        //$('#error-dialog-content').text('Error code: '+ error.code);
-        //caphPlayer.errorDialog.caphDialog('open');
+        $('#error-dialog-content').text('Error code: '+ error.code);
+        caphPlayer.errorDialog.caphDialog('open');
 
         if(error.code === 3015 || error.code === 3016) {return;}
         //for loop video
         console.log('Error code: '+ error.code);
-        playByIndex(caphPlayer.currentIndex+1);
+        //playByIndex(caphPlayer.currentIndex+1);
     }
 
     /*
@@ -47,7 +47,7 @@
         caphPlayer.video = document.getElementById('video');
 
         var player = new shaka_.Player(caphPlayer.video);
-
+        //console.log(shaka_.Player.version);
         // Attach player to the window to make it easy to access in the JS console.
         caphPlayer.player = player;
 
@@ -103,18 +103,14 @@
         shaka_.polyfill.installAll();
 
         // Check to see if the browser supports the basic APIs Shaka needs.
-        // This is an asynchronous check.
-        shaka_.Player.support().then(function(support) {
-            // This executes when the asynchronous check is complete.
-            if (support.supported) {
+        if(shaka_.Player.isBrowserSupported()) {
             // Everything looks good!
             createShakaPlayer(asset);
             console.log('TV is supported!');
-            } else {
+        } else {
             // This browser does not have the minimum set of APIs we need.
             console.error('Browser not supported!');
-            }
-        });
+        }
     }
 
     /*
@@ -282,7 +278,6 @@
         else if(index+1>caphPlayer.playlistLength) {
             index = 0;
         }
-
         caphPlayer.player.destroy();
         caphPlayer.videoTracks = [];
         caphPlayer.textTracks = [];
@@ -291,7 +286,6 @@
         createShakaPlayer(caphPlayer.playlist[index]);
         caphPlayer.initPlayerMenu();
         caphPlayer.currentIndex = index;
-        
     }
 
     /*
@@ -670,7 +664,7 @@
         */
         caphPlayer.errorDialog = $('<div/>', {
             class: 'caph-dialog'
-        });//.appendTo(root_);
+        }).appendTo(root_);
         $('<div/>', {
             class: 'caph-dialog-title',
             text: 'CAPH Player Error:'
@@ -739,7 +733,7 @@
         switch(event.keyCode) {
             case $.caph.focus.Constant.DEFAULT.KEY_MAP.RETURN:
             case $.caph.focus.Constant.DEFAULT.KEY_MAP.ESC:
-                caphPlayer.hideSelectedList();
+                //caphPlayer.hideSelectedList();
                 break;
             default:
                 break;
@@ -758,7 +752,7 @@
     }
 
     $.fn.caphDashjsPlayer = function(options) {
-
+        
         //define default options
         var defaults = {
             defaultIndex: 0

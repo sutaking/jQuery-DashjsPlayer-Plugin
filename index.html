@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="./assets/player-styles.css">
 
     <!-- Shaka Player compiled library: -->
-    <script src="./lib/shaka/shaka-player.compiled.js"></script>
-    <script src="./lib/shaka/goog/base.js"></script>
-    <script src="./lib/shaka/deps.js"></script>
+    <!-- script src="./lib/shaka/goog/base.js"></script> 
+    <script src="./lib/shaka/deps.js"></script> 
+    <script src="./lib/shaka/shaka-player.uncompiled.js"></script-->
 
     <!-- CAPH Dependecies -->
     <script src="./lib/jquery/jquery.min.js"></script>
@@ -19,7 +19,9 @@
     <script src="./lib/caph-jquery.min.js"></script>
 
     <!-- CAPH Dash.js MediaPlayer source: -->
+    <script src="./src/load.js"></script>
     <script src="./src/caphDashjsPlayer.js"></script>
+
 
 </head>
 <body>
@@ -30,6 +32,100 @@
         /*
         *   we can discuss more detail about data.
         */
+        /*medias.push({
+            name: 'Angel One Widevine',
+            post: '../assets/tmp/1.jpg',
+            uri: 'https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd',
+            encoder: 'Shaka packager',
+            source: 'Shaka',
+            drm: ['com.widevine.alpha'],
+            features: [],
+            licenseServers: {
+              'com.widevine.alpha': 'https://widevine-proxy.appspot.com/proxy'
+            }
+        });*/
+
+        medias.push({
+            name: 'Angel One (multicodec, multilingual, ClearKey server)',
+            post: '../assets/tmp/1.jpg',
+            uri: 'https://storage.googleapis.com/shaka-demo-assets/angel-one-clearkey/dash.mpd',
+            drm:['org.w3.clearkey'],
+            encoder: 'Shaka packager',
+            source: 'Shaka',
+            features:[],
+            licenseServers: {
+                'org.w3.clearkey': '//cwip-shaka-proxy.appspot.com/clearkey?_u3wDe7erb7v8Lqt8A3QDQ=ABEiM0RVZneImaq7zN3u_w'
+            }
+        });
+
+        medias.push({
+            name: 'Sintel 4k (multicodec, Widevine)',
+            post: '../assets/tmp/2.jpg',
+            uri: 'https://storage.googleapis.com/shaka-demo-assets/sintel-widevine/dash.mpd',            
+            encoder: 'Shaka packager',
+            source: 'Shaka',
+            drm:['com.widevine.alpha'],
+            features:[],
+            licenseServers: {
+              'com.widevine.alpha': 'https://widevine-proxy.appspot.com/proxy'
+            },
+        });
+
+        medias.push({
+            name: 'Sintel 4k (multicodec, VTT in MP4)',
+            post: '../assets/tmp/3.jpg',
+            uri: 'https://storage.googleapis.com/shaka-demo-assets/sintel-mp4-wvtt/dash.mpd',
+            drm:[],
+            features:[]
+        });
+
+        medias.push({
+            name: 'Multi-DRM',
+            post: '../assets/tmp/3.jpg',
+            uri: 'https:',
+            drm: [
+                  'com.microsoft.playready',
+                  'com.widevine.alpha'
+                ],
+            features:[],
+            licenseServers: {
+              'com.widevine.alpha': 'https://drm-widevine-licensing.axtest.net/AcquireLicense',  // gjslint: disable=110
+              'com.microsoft.playready': 'https://drm-playready-licensing.axtest.net/AcquireLicense'  // gjslint: disable=110
+            },
+            licenseRequestHeaders: {
+              'X-AxDRM-Message': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA'  // gjslint: disable=110
+            }
+        });
+
+
+        medias.push({
+            name: 'Tears of Steel (PlayReady)',
+            post: '../assets/tmp/3.jpg',
+            uri: 'https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-playready.ism/.mpd',
+            drm: [
+                  'com.microsoft.playready'
+                ],
+            licenseServers: {
+                  'com.microsoft.playready': 'https://playready.directtaps.net/pr/svc/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1'  // gjslint: disable=110
+                }
+        });
+        medias.push({
+            name: 'Big Buck Bunny',
+            post: '../assets/tmp/3.jpg',
+            uri: 'https://amssamples.streaming.mediaservices.windows.net/622b189f-ec39-43f2-93a2-201ac4e31ce1/BigBuckBunny.ism/manifest(format=mpd-time-csf)',
+            disabled: true,
+            drm: [
+                  'com.microsoft.playready',
+                  'com.widevine.alpha'
+                ],
+            features:[],
+            licenseServers: {
+              'com.widevine.alpha': 'https://amssamples.keydelivery.mediaservices.windows.net/Widevine/?KID=1ab45440-532c-4399-94dc-5c5ad9584bac',  // gjslint: disable=110
+              'com.microsoft.playready': 'https://amssamples.keydelivery.mediaservices.windows.net/PlayReady/'  // gjslint: disable=110
+            }
+        });
+
+        //MSE source
         medias.push({
             name: '[mse]Car',
             post: '../assets/tmp/3.jpg',
@@ -37,16 +133,7 @@
             drm:[],
             features:[]
         });
-        medias.push({
-            name: 'Sintel 4k (multicodec, Widevine)',
-            post: '../assets/tmp/2.jpg',
-            uri: 'https://storage.googleapis.com/shaka-demo-assets/sintel-widevine/dash.mpd',
-            licenseServers: {
-              'com.widevine.alpha': 'https://widevine-proxy.appspot.com/proxy'
-            },
-            drm:['com.widevine.alpha'],
-            features:[]
-        });
+        
         medias.push({
             name: '[mse]Angel One (multicodec, multilingual)',
             post: '../assets/tmp/1.jpg',

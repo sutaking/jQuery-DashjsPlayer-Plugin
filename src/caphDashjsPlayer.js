@@ -328,7 +328,7 @@
 
         caphPlayer.currentIndex = index;
         caphPlayer.initPlayerMenu();
-        caphPlayer.infoElement.text('['+(caphPlayer.currentIndex+1)+']:'+caphPlayer.playlist[caphPlayer.currentIndex].name);
+        caphPlayer.infoElement.text('['+caphPlayer.currentIndex+']:'+caphPlayer.playlist[caphPlayer.currentIndex].name);
         
         load(caphPlayer.playlist[index]);
         
@@ -462,7 +462,7 @@
         caphPlayer.infoElement = $('<div/>', {
             class: 'infobars'
         }).appendTo(root_);
-        caphPlayer.infoElement.text('['+(caphPlayer.currentIndex+1)+']:'+caphPlayer.playlist[caphPlayer.currentIndex].name);
+        caphPlayer.infoElement.text('['+caphPlayer.currentIndex+']:'+caphPlayer.playlist[caphPlayer.currentIndex].name);
 
         function disableButton(btn) {
             $(btn).addClass('disable');
@@ -764,12 +764,12 @@
         caphPlayer.hideMenu();
 
         caphPlayer.initPlayerMenu = function() {
-            caphPlayer.updatePlaylistStatus();
+            //caphPlayer.updatePlaylistStatus();
             loadIcon.show();
             releaseButton(subtitleButton);
             currentTime.text('00:00');
             durationTime.text('00:00');
-            //infoElement.text('');
+            caphPlayer.infoElement.text('');
             processTransform(playProcess, 0);
             processTransform(loadProcess, 0);
             $.caph.focus.controllerProvider.getInstance().focus($('#initial-btn')[0]);

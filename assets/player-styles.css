@@ -24,13 +24,13 @@ a {
     position: absolute;
     top :5px;
     background: rgba(150, 153, 159, .2);
-    width: 150px;
-    height: 30px;
-    line-height: 30px;
+    width: 1920px;
+    height: 60px;
+    line-height: 60px;
     text-align: center;
-    font-size: 10px;
+    font-size: 40px;
     z-index: 99;
-    color: red;
+    color: white;
 }
 
 .bars {

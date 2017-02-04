@@ -13,7 +13,7 @@
     function onError(error) {
         console.error('Error code', error.code, 'object', error);
 
-        $('#error-dialog-content').text('Error code: '+ error.code);
+        $('#error-dialog-content').text('Error Message: '+ error.message);
         caphPlayer.errorDialog.caphDialog('open');
 
         if(error.code === 3015 || error.code === 3016) {return;}
@@ -47,28 +47,63 @@
         caphPlayer.video = document.getElementById('video');
 
         var player = new shaka_.Player(caphPlayer.video);
-        //console.log(shaka_.Player.version);
+        console.log(shaka_.Player.version);
         // Attach player to the window to make it easy to access in the JS console.
-        caphPlayer.player = player;
+        caphPlayer.player_ = player;
 
         // Listen for error events.
         player.addEventListener('error', onErrorEvent);
+
+        if(asset) {
+            load(asset);
+        }
+        
+    }
+
+    function load(asset) {
+
+        var player = caphPlayer.player_;
+        var asset_ = preparePlayer_(asset);
+
+        // Try to load a manifest.
+        // This is an asynchronous process.
+        player.load(asset.uri).then(function() {
+            // This runs if the asynchronous load is successful.
+            console.log('The video has now been loaded!');
+        }).catch(onError);  // onError is executed if the asynchronous load fails.
+    }
+
+    function preparePlayer_(asset) {
+
+        var player = caphPlayer.player_;
 
         // Add config from this asset.
         var config = ({ abr: {}, drm: {}, manifest: { dash: {} } });
         config.manifest.dash.clockSyncUri = 'https://shaka-player-demo.appspot.com/time.txt';
 
-        if (asset.licenseServers) {
-          config.drm.servers = asset.licenseServers;
-        }
-        if (asset.drmCallback) {
-          config.manifest.dash.customScheme = asset.drmCallback;
-        }
-        if (asset.clearKeys) {
-          config.drm.clearKeys = asset.clearKeys;
-        }
-
         player.resetConfiguration();
+        setupAssetMetadata(asset, player);
+
+        //to-do add callback
+        /*shakaDemo.castProxy_.setAppData({
+          'asset': asset,
+          'isYtDrm': asset.drmCallback == shakaAssets.YouTubeCallback
+        });*/
+
+        player.configure(config);
+    }
+
+    function setupAssetMetadata(asset, player) {
+        var config = /** @type {shakaExtern.PlayerConfiguration} */(
+            { drm: {}, manifest: { dash: {} } });
+
+        // Add config from this asset.
+        if (asset.licenseServers)
+          config.drm.servers = asset.licenseServers;
+        if (asset.drmCallback)
+          config.manifest.dash.customScheme = asset.drmCallback;
+        if (asset.clearKeys)
+          config.drm.clearKeys = asset.clearKeys;
         player.configure(config);
 
         // Configure network filters.
@@ -77,21 +112,29 @@
         networkingEngine.clearAllResponseFilters();
 
         if (asset.licenseRequestHeaders) {
-          var filter = shaka_.addLicenseRequestHeaders_.bind(
+          var filter = addLicenseRequestHeaders_.bind(
               null, asset.licenseRequestHeaders);
           networkingEngine.registerRequestFilter(filter);
         }
 
-        if (asset.licenseProcessor) {
-          networkingEngine.registerResponseFilter(asset.licenseProcessor);
-        }
+        if (asset.requestFilter)
+          networkingEngine.registerRequestFilter(asset.requestFilter);
+        if (asset.responseFilter)
+          networkingEngine.registerResponseFilter(asset.responseFilter);
+        if (asset.extraConfig)
+          player.configure(/** @type {shakaExtern.PlayerConfiguration} */(
+              asset.extraConfig));
+    }
 
-        // Try to load a manifest.
-        // This is an asynchronous process.
-        player.load(asset.uri).then(function() {
-            // This runs if the asynchronous load is successful.
-            console.log('The video has now been loaded!');
-        }).catch(onError);  // onError is executed if the asynchronous load fails.
+    function addLicenseRequestHeaders_(headers, requestType, request) {
+
+        if (requestType != shaka_.net.NetworkingEngine.RequestType.LICENSE) return;
+
+        // Add these to the existing headers.  Do not clobber them!
+        // For PlayReady, there will already be headers in the request.
+        for (var k in headers) {
+          request.headers[k] = headers[k];
+        }
     }
 
     /*
@@ -253,7 +296,7 @@
                 return;
         }
         updateSelectedItem(type, key);
-        trackVal ? caphPlayer.player.selectTrack(trackVal, true): null;
+        trackVal ? caphPlayer.player_.selectTrack(trackVal, true): null;
     }
     
     function playByIndex(index) {
@@ -278,14 +321,17 @@
         else if(index+1>caphPlayer.playlistLength) {
             index = 0;
         }
-        caphPlayer.player.destroy();
+        //caphPlayer.player_.destroy();
         caphPlayer.videoTracks = [];
         caphPlayer.textTracks = [];
         caphPlayer.audioTracks = [];
 
-        createShakaPlayer(caphPlayer.playlist[index]);
-        caphPlayer.initPlayerMenu();
         caphPlayer.currentIndex = index;
+        caphPlayer.initPlayerMenu();
+        caphPlayer.infoElement.text('['+(caphPlayer.currentIndex+1)+']:'+caphPlayer.playlist[caphPlayer.currentIndex].name);
+        
+        load(caphPlayer.playlist[index]);
+        
     }
 
     /*
@@ -413,17 +459,18 @@
         }).appendTo(processLine);
 
         //show video resolution in real time
-        var infoElement = $('<div/>', {
+        caphPlayer.infoElement = $('<div/>', {
             class: 'infobars'
         }).appendTo(root_);
+        caphPlayer.infoElement.text('['+(caphPlayer.currentIndex+1)+']:'+caphPlayer.playlist[caphPlayer.currentIndex].name);
 
         function disableButton(btn) {
             $(btn).addClass('disable');
-            !$.isEmptyObject(caphPlayer.textTracks) ? caphPlayer.player.setTextTrackVisibility(true): null;
+            !$.isEmptyObject(caphPlayer.textTracks) ? caphPlayer.player_.setTextTrackVisibility(true): null;
         }
         function releaseButton(btn) {
             $(btn).removeClass('disable');
-            caphPlayer.player.setTextTrackVisibility(false);
+            caphPlayer.player_.setTextTrackVisibility(false);
         }
 
         /*
@@ -472,14 +519,14 @@
                 loadedmetadata: function () {
                     console.log('video event [loadedmetadata]');
                     durationTime.text(caphPlayer.isLive ? 'Live':formatTime($(self)[0].duration));
-                    saveMediaTracks(caphPlayer.player.getTracks());
+                    saveMediaTracks(caphPlayer.player_.getTracks());
 
                     createMenu();
 
                     if($.isEmptyObject(caphPlayer.textTracks)) {
                         disableButton(subtitleButton);
                     }
-
+                    
                 },
                 //Fires when the browser has loaded the current frame of the audio/video
                 loadeddata: function () {
@@ -505,7 +552,7 @@
                 },
                 //Fires when the current playlist is ended
                 ended: function () {
-                    console.log('******video event [ended]');
+                    console.log('video event [ended]');
                     //playButton.toggleClass('fa-play' + ' ' + 'fa-pause');
                     playButton.addClass('fa-play').removeClass('fa-pause');
                     playByIndex(caphPlayer.currentIndex+1);
@@ -606,7 +653,7 @@
             if($.isEmptyObject(caphPlayer.textTracks)) {return;}
 
             setTracks('text', 'en');
-            caphPlayer.player.isTextTrackVisible()?releaseButton(this):disableButton(this);
+            caphPlayer.player_.isTextTrackVisible()?releaseButton(this):disableButton(this);
 
         }).appendTo(settingbuttonsArea);
 
@@ -633,9 +680,14 @@
             style:''
         }).appendTo(listArea);
 
-        var itemTemplate = '<div id="<%=index%>" class="item" style="background:url(<%= item.post %>) center center no-repeat; background-size:cover;" focusable>'+
+        /*var itemTemplate = '<div id="<%=index%>" class="item" style="background:url(<%= item.post %>) center center no-repeat; background-size:cover;" focusable>'+
         '<div hide id="playlist-item-<%=index%>" class="statu-icon fa fa-play-circle-o" aria-hidden="true"></div>'+
+        '</div>';*/
+
+        var itemTemplate = '<div id="<%=index%>" class="item" style="background-color:white;" focusable>'+
+        '<div style="color:black;line-height: 180px;font-size: 160px;"><%=index%></div>'+
         '</div>';
+
         $('#list1').caphList({
             items: caphPlayer.playlist,
             template: itemTemplate,
@@ -648,8 +700,8 @@
         });
 
         caphPlayer.updatePlaylistStatus = function() {
-            $('.statu-icon').hide();
-            $('#playlist-item-'+caphPlayer.currentIndex).show();
+            //$('.statu-icon').hide();
+            //$('#playlist-item-'+caphPlayer.currentIndex).show();
         };
 
         $.caph.focus.controllerProvider.onSelected(function(event) {
@@ -712,7 +764,7 @@
         caphPlayer.hideMenu();
 
         caphPlayer.initPlayerMenu = function() {
-            //caphPlayer.updatePlaylistStatus();
+            caphPlayer.updatePlaylistStatus();
             loadIcon.show();
             releaseButton(subtitleButton);
             currentTime.text('00:00');

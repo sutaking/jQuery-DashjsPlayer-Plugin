@@ -1,33 +1,34 @@
 {
-  "name": "dashplayer",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.html",
-  "scripts": {
-    "start": "http-server -p 8888",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "dash.js",
-    "shakaPlayer",
-    "caph"
-  ],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "grunt": "^1.0.1",
-    "grunt-contrib-connect": "^1.0.2",
-    "grunt-contrib-jshint": "^1.0.0",
-    "grunt-contrib-watch": "^1.0.0",
-    "grunt-karma": "^2.0.0",
-    "jshint-html-reporter": "^0.2.4",
-    "karma": "^1.2.0",
-    "karma-chrome-launcher": "^2.0.0",
-    "karma-html-reporter": "^0.2.7",
-    "karma-htmlfile-reporter": "^0.3.4",
-    "karma-phantomjs-launcher": "^1.0.2",
-    "karma-qunit": "^1.2.0",
-    "load-grunt-tasks": "^3.5.2",
-    "qunitjs": "^2.0.1"
-  }
+    "name": "dashplayer",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.html",
+    "scripts": {
+        "start": "node server.js",
+        "test": "karma karma.conf.js"
+    },
+    "keywords": [
+        "dash.js",
+        "shakaPlayer",
+        "caph"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "express": "^4.16.3",
+        "grunt": "^1.0.1",
+        "grunt-contrib-connect": "^1.0.2",
+        "grunt-contrib-jshint": "^1.0.0",
+        "grunt-contrib-watch": "^1.0.0",
+        "grunt-karma": "^2.0.0",
+        "jshint-html-reporter": "^0.2.4",
+        "karma": "^1.2.0",
+        "karma-chrome-launcher": "^2.0.0",
+        "karma-html-reporter": "^0.2.7",
+        "karma-htmlfile-reporter": "^0.3.4",
+        "karma-phantomjs-launcher": "^1.0.2",
+        "karma-qunit": "^1.2.0",
+        "load-grunt-tasks": "^3.5.2",
+        "qunitjs": "^2.0.1"
+    }
 }

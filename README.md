@@ -2,9 +2,29 @@
 
 ## Introduce
 
-[!img](./assets/screenshots.png)
+![img](./assets/screenshots.png)
 
 ## Getting Start
+
+````
+yarn start // start localhost:3000
+
+yarn test // start karma to test src code.
+````
+
+## Usage
+
+````javascript
+// html
+<div id="player"></div>
+
+// app.js
+var playlist = [...src];
+
+$('#player').caphDashjsPlayer({
+    datas : playlist // datas can not rename
+});
+````
 
 ## About
 

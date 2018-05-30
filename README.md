@@ -1,6 +1,9 @@
 # Dashjs-Player-jQuery-Plugin
 
 ## Introduce
+ It's a h5 video player using caph3-jquery, based on MSE/EME player named [shaka-player](https://github.com/google/shaka-player).
+
+ UX/UI design for TV application, support remote control. 
 
 ![img](./assets/screenshots.png)
 

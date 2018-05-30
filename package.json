@@ -10,9 +10,10 @@
     "keywords": [
         "dash.js",
         "shakaPlayer",
-        "caph"
+        "caph3",
+        "jQuery"
     ],
-    "author": "",
+    "author": "sutaking",
     "license": "MIT",
     "devDependencies": {
         "express": "^4.16.3",
